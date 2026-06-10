@@ -17,7 +17,7 @@ An interactive FnO learning platform with paper trading, pre-market analysis, an
 | Frontend | React + Vite |
 | Database | SQLite |
 | Market Data | yfinance + NSE API |
-| LLM | Groq (free tier, LLaMA 3) |
+| LLM | Groq (free tier, LLaMA 3) + Ollama |
 | Scheduling | APScheduler |
 
 ## Setup
@@ -44,9 +44,9 @@ If you prefer to start them manually:
 
 **Backend:**
 ```bash
-cd backend
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+cd backend
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
@@ -76,7 +76,7 @@ docker-compose up --build
 2. Refer to the [DATA_SOURCES.md](DATA_SOURCES.md) file to find the required URLs.
 3. Paste the URLs into the **Data Sources** section and save.
 
-*LLM integrations (like Groq) are also configured directly within the Settings page.*
+*LLM integrations (like Groq and Ollama) are also configured directly within the Settings page.*
 
 ## Usage
 
