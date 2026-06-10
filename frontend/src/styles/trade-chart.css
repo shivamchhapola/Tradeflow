@@ -1,0 +1,234 @@
+/* ── Chart ──────────────────────────────────────────────────────────────── */
+
+.trade-chart,
+.trade-chain {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.trade-chart-header,
+.trade-chain-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.trade-chart-header {
+  padding: 12px 14px;
+  background: var(--bg-card);
+}
+
+.trade-chart-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.trade-chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trade-chart-body {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+}
+
+.trade-chart-order-slot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 25;
+  max-width: min(260px, calc(100% - 24px));
+  pointer-events: none;
+}
+
+.trade-chart-order-slot > * {
+  pointer-events: auto;
+}
+
+.trade-chart-order-overlay {
+  width: 100%;
+  max-height: min(72vh, calc(100% - 24px));
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.trade-chart-order-overlay.call {
+  border-top: 3px solid var(--red);
+}
+
+.trade-chart-order-overlay.put {
+  border-top: 3px solid var(--green);
+}
+
+.chart-settings-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.chart-settings-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.chart-range-chip {
+  padding: 2px 8px;
+  font-size: 10px;
+}
+
+.chart-settings-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.chart-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.chart-toggle input {
+  accent-color: var(--accent);
+}
+
+.trade-chart-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chart-back-btn {
+  padding: 2px 8px !important;
+  height: 22px !important;
+  font-size: 11px !important;
+}
+
+.lightweight-chart {
+  position: absolute;
+  inset: 0;
+}
+
+.trade-chart-overlay {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  z-index: 2;
+}
+
+/* ── Chart: price block ─────────────────────────────────────────────────── */
+
+.chart-price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.chart-daily-change {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* ── Chart: overlay toggle dots ─────────────────────────────────────────── */
+
+.chart-toggle-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-toggle-dot.sma9  { background: #2dd4bf; }
+.chart-toggle-dot.sma21 { background: #f59e0b; }
+.chart-toggle-dot.vwap  { background: #a78bfa; }
+
+.chart-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.chart-toggle input {
+  display: none;
+}
+
+.chart-toggle input:not(:checked) + .chart-toggle-dot {
+  opacity: 0.3;
+}
+
+/* ── Chart: market-closed state ─────────────────────────────────────────── */
+
+.chart-closed-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.chart-closed-icon {
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.chart-closed-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.chart-closed-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.chart-closed-time {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+

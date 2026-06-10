@@ -1,0 +1,501 @@
+/*
+ * Tradeflow — Dashboard-specific widget styles.
+ * Score card, bias meter, grade badge, signal alignment dots, data table,
+ * warning banner, playbook card, metric rows, XP progress bar.
+ * Generic card primitives live in cards.css.
+ */
+.dashboard-container,
+.dashboard-skeleton {
+  max-width: 1240px;
+  width: 100%;
+}
+/* ── Data freshness chip (sits next to the manual-refresh button) ──
+   Quiet metadata about the snapshot, not a pill — pills carry status, this
+   carries "how stale". Reads as one phrase: same color, same font, no mono
+   stripe in the middle. Tabular nums would only help if the digits were
+   stable-width — they aren't ("5s" → "12s" → "2m" → "14h" → "2d"). Hovers
+   up to --text-secondary as an affordance for the tooltip showing the
+   absolute IST timestamp. */
+.data-freshness {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: default;
+  transition: color var(--transition);
+}
+
+.data-freshness:hover,
+.data-freshness.is-refreshing {
+  color: var(--text-secondary);
+}
+
+/* ── Kite link banner ──
+   Side-by-side body + action group on desktop; below 520 px the action
+   group drops to a new row and right-aligns. Keeps both buttons together
+   as a unit so the dismiss X never separates from the primary CTA. */
+.kite-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.kite-banner-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.kite-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+@media (max-width: 520px) {
+  .kite-banner-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ── Score Card ── */
+.score-card-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-2);
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.score-value-wrap {
+  min-width: 0;
+  max-width: min-content;
+  flex: 1 1 auto;
+}
+
+.score-value {
+  font-family: var(--font);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-value.bullish { color: var(--green); }
+.score-value.bearish { color: var(--red); }
+.score-value.neutral { color: var(--text-secondary); }
+
+/* Grade conviction badge — desktop 56px, shrinks at <=480px so the score
+   number, meter labels, and grade letter all fit on one row inside a
+   narrow card. Border / glow tokens come from inline style so each grade
+   keeps its A=green / B=blue / C=amber palette. */
+.grade-circle {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+}
+
+@media (max-width: 480px) {
+  .grade-circle {
+    width: 44px;
+    height: 44px;
+    font-size: 19px;
+    border-width: 2px;
+  }
+}
+
+.score-bar {
+  height: 4px;
+  background: var(--bg-surface);
+  border-radius: 2px;
+  margin-top: var(--space-4);
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.score-bar-fill.bullish { background: var(--green); }
+.score-bar-fill.bearish { background: var(--red); }
+
+/* ── Bias Label & Meter ── */
+.bias-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: var(--space-2);
+}
+.bias-label.bullish { color: var(--green); }
+.bias-label.bearish { color: var(--red); }
+.bias-label.neutral { color: var(--text-secondary); }
+
+.bias-meter {
+  position: relative;
+  margin-top: var(--space-5);
+  padding-top: 6px;
+}
+
+.bias-meter-track-shell {
+  position: relative;
+}
+
+.bias-meter-zero-line {
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  width: 0;
+  height: 16px;
+  border-left: 2px dotted rgba(255, 255, 255, 0.45);
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.bias-meter-track {
+  position: relative;
+  height: 10px;
+  background: var(--bg-surface);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.bias-meter-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 2px;
+  transition:
+    left 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.35s ease,
+    box-shadow 0.35s ease;
+  z-index: 2;
+}
+
+.bias-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  margin-top: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.bias-meter-label-zero {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+}
+
+/* ── Grade Badge ── */
+.grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.grade-A { background: var(--green-bg); color: var(--green); }
+.grade-B { background: var(--blue-bg);  color: var(--blue);  }
+.grade-C { background: var(--amber-bg); color: var(--amber); }
+
+/* ── Signal Dots (Alignment Meter) ── */
+.signal-dots {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+
+.signal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  transition: background var(--transition);
+}
+
+.signal-dot.bull { background: var(--green); }
+.signal-dot.bear { background: var(--red); }
+
+/* ── Data Table (Global Markets) ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.data-table td {
+  padding: 11px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tr:last-child td { border-bottom: none; }
+
+.data-table tr:hover td { background: var(--bg-card-hover); }
+
+.data-table .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: -0.01em;
+}
+
+/* ── Mobile market list (≤600px) ──
+   Replaces the 5-column data-table at phone widths. Each row is a small
+   two-line card: name + change on top (the headline read), then a meta
+   strip with weight, signed contribution, and the bull/bear signal pill.
+   Density matches the desktop table 1:1 — no info is hidden, just stacked.
+   .markets-table-desktop / .markets-list-mobile visibility is toggled via
+   the @media block below. Both subtrees are always in the DOM so swapping
+   between layouts is a CSS-only repaint, no React remount. */
+.markets-list-mobile {
+  display: none;
+}
+
+.market-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.market-row:first-child {
+  border-top: none;
+  margin-top: 4px;
+}
+
+.market-row.unavailable {
+  opacity: 0.55;
+}
+
+.market-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.market-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  /* Dashed underline echoes the desktop table's "hover for context" cue,
+     so touch users see the same affordance their long-press will surface. */
+  border-bottom: 1px dashed var(--text-muted);
+  cursor: help;
+}
+
+.market-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: help;
+}
+
+.market-row-bot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.market-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  cursor: help;
+}
+
+.market-meta-val {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: 3px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+@media (max-width: 600px) {
+  .markets-table-desktop {
+    display: none;
+  }
+  .markets-list-mobile {
+    display: block;
+  }
+}
+
+/* ── Warning Banner ── */
+.warning-card {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: var(--amber);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.warning-card .warning-icon {
+  margin-right: var(--space-2);
+}
+
+/* ── Playbook ── */
+.playbook-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+}
+
+.playbook-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  color: var(--text-primary);
+}
+
+.playbook-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.playbook-action {
+  margin-top: var(--space-3);
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ── Metric Row ── */
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.metric-row:last-child { border-bottom: none; }
+
+.metric-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.metric-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ── Metric pair row (MetricsCard) ──
+   Two-column row: label cluster on the left, value on the right.
+   Wraps the value onto a second line below 420px so long values like
+   "Sellers' edge" or "Compression / sideways" don't get visually cut
+   off by the label. Right-aligns when on one line, left-aligns (with
+   a small indent that matches the label icon) when wrapped, so the
+   value still feels paired with its row. */
+.metric-pair-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.metric-pair-value {
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .metric-pair-value {
+    text-align: left;
+    white-space: normal;
+    /* Aligns under the icon (14px icon + 10px gap). Keeps the wrapped
+       value visually tethered to its row. */
+    padding-left: 24px;
+    flex-basis: 100%;
+  }
+}
+
+/* ── XP Bar (Portfolio + LevelPill popover) ── */
+.xp-bar-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.xp-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--xp), #f59e0b);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+}
+
+.xp-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--xp);
+  font-variant-numeric: tabular-nums;
+}

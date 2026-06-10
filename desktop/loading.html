@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tradeflow</title>
+  <style>
+    /* No network requests — this screen shows before the backend is ready */
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #08080a;
+      color: #f4f4f7;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-app-region: drag;
+      overflow: hidden;
+    }
+
+    .logo {
+      width: 52px;
+      height: 52px;
+      margin-bottom: 24px;
+      opacity: 0;
+      transform: scale(0.85);
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+    }
+
+    @keyframes popIn {
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .wordmark {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #f4f4f7;
+      margin-bottom: 8px;
+      opacity: 0;
+      animation: fadeUp 0.5s ease 0.3s forwards;
+    }
+
+    .tagline {
+      font-size: 13px;
+      color: #909099;
+      font-weight: 400;
+      margin-bottom: 44px;
+      opacity: 0;
+      animation: fadeUp 0.5s ease 0.45s forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .spinner-wrap {
+      opacity: 0;
+      animation: fadeUp 0.5s ease 0.6s forwards;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid rgba(45, 212, 191, 0.15);
+      border-top-color: #2dd4bf;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status {
+      font-size: 12px;
+      color: #909099;
+      letter-spacing: 0.2px;
+    }
+
+    /* Pulsing dots to indicate activity */
+    .status::after {
+      content: '';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%   { content: ''; }
+      25%  { content: '.'; }
+      50%  { content: '..'; }
+      75%  { content: '...'; }
+      100% { content: ''; }
+    }
+
+    .version {
+      position: fixed;
+      bottom: 24px;
+      font-size: 11px;
+      color: rgba(144, 144, 153, 0.5);
+      letter-spacing: 0.3px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Inline SVG logo — no network request needed -->
+  <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#2dd4bf"/>
+        <stop offset="1" stop-color="#14b8a6"/>
+      </linearGradient>
+    </defs>
+    <rect x="2" y="2" width="28" height="28" rx="7" fill="#08080a"/>
+    <rect x="2" y="2" width="28" height="28" rx="7" fill="none" stroke="url(#g)" stroke-width="1.5" opacity="0.9"/>
+    <path d="M7 21 L13 13 L18 17 L25 9" fill="none" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="25" cy="9" r="2" fill="#2dd4bf"/>
+  </svg>
+
+  <div class="wordmark">Tradeflow</div>
+  <div class="tagline">FnO Paper Trading & Education</div>
+
+  <div class="spinner-wrap">
+    <div class="spinner"></div>
+    <div class="status">Starting services</div>
+  </div>
+
+  <div class="version">v1.0.0</div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+---
+description: When and how to split files that have grown too large
+alwaysApply: true
+---
+
+# Modularization
+
+Before adding code to an existing file, check its current line count. If editing or adding code would push a file past these thresholds, **pause and consider splitting**. Don't ship code that pushes a file deeper into the "too big" zone unless the addition is genuinely inseparable.
+
+## Thresholds
+
+| Lines | Action |
+| --- | --- |
+| < 400 | Fine. Add what you need. |
+| 400–600 | Watch zone. Don't make it worse. Prefer extracting your addition into a sibling module if it's its own concern. |
+| 600–800 | **Propose a split** before adding. Explain your plan in chat first. |
+| > 800 | **Don't add to it** without splitting. The file is already a navigation tax. |
+
+CSS files get a 50% bonus on these thresholds (selectors are line-cheap).
+
+## When splitting IS the right call
+
+- File has multiple, distinct concerns living together (e.g. `App.jsx` containing routing + nav + user menu + popovers; `App.css` containing tokens + buttons + cards + dashboard layout).
+- A section could be lifted out and tested / read independently without dragging the rest with it.
+- One sub-component or section is the only thing being edited in a series of recent changes (signal: the file is a "main" file for one feature pretending to be a shared file).
+- A page file (`pages/*.jsx`) is mixing layout, state, and inline sub-components that have nothing to do with routing.
+
+## When splitting is NOT the right call (don't do it)
+
+- Single coherent unit that's just naturally long (one complex form component, one CRUD route handler with branching).
+- Pure data files — large lists, dictionaries, fixtures (e.g. `quiz_bank.py`). Splitting these just adds import indirection for zero comprehension gain.
+- CSS where the selectors really do belong together (`.card` and `.card-header`, `.btn` and `.btn-primary`). Group by feature, not by line count.
+- Code that's tightly coupled and would require crossing the new module boundary on every line you write. The indirection cost beats the file-size cost.
+
+## How to split well
+
+1. **Identify natural seams first.** What are the distinct concerns? Don't slice arbitrarily mid-section.
+2. **Name the new file after the concern, not the source file.** `nav-user-menu.jsx`, not `App.part2.jsx`.
+3. **Keep tightly coupled siblings together.** A `<UserMenu>` and its `<KiteMenuItem>` should live in one file unless one is reused elsewhere.
+4. **Co-locate styles with components when possible.** A new `nav.jsx` paired with a `nav.css` is fine. Don't split CSS so finely that one selector lives alone.
+5. **Update imports in one commit.** Don't leave stale references.
+6. **Update `TECHNICAL_DETAILS.md`** if you've added a new module worth knowing about. Per `AGENTS.md`, architectural changes require doc updates.
+
+## Examples in this project
+
+- `App.css` (1200+ lines) → split into `tokens.css`, `base.css`, `nav.css`, `buttons.css`, `cards.css`, `dashboard.css`, `pills.css`, etc. imported by `App.css` as a thin entry point.
+- `App.jsx` (~500 lines) → keep routing + tooltip mount; extract `Nav.jsx`, `UserMenu.jsx`, `LevelPill.jsx`.
+- `QuestCard.jsx` (~750 lines) → extract `QuestLoading.jsx`, `QuestIntro.jsx`, `QuestQuiz.jsx`, `QuestCompleted.jsx`.
+- `main.py` (~660 lines) → split into per-domain `APIRouter`s (`routes/quests.py`, `routes/trades.py`, `routes/analysis.py`) the way `auth/routes.py` already does it.
+
+## What to tell the user
+
+When you decide to split, briefly say what you're doing and why ("Splitting `App.css` along its section headers because it's at 1200 lines"). Don't ask permission for obvious splits, but do explain your seam choice if it's non-obvious.
+
+When you decide NOT to split a large file, say why ("Leaving `quiz_bank.py` at 660 lines — it's a data file, splitting would just add import indirection").

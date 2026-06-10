@@ -1,0 +1,263 @@
+/*
+ * Tradeflow — Journal & Reports Stylesheet
+ * Full redesign: rich trading journal with stats strip, filter bar,
+ * process badges, thesis alignment bars, and animated mentor tiles.
+ */
+
+/* ── Page Container ── */
+.reports-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 860px;
+  margin: 0 auto;
+  padding-bottom: var(--space-8);
+}
+
+/* ══════════════════════════════════════════
+   HEADER — title + stat strip
+══════════════════════════════════════════ */
+
+.reports-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.reports-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.reports-hero-title h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.reports-hero-title p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+/* Stat strip — 4 quick metrics across the top */
+.reports-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.rstat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  transition: border-color var(--transition);
+}
+
+.rstat:hover { border-color: var(--border-strong); }
+
+.rstat-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rstat-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+}
+
+.rstat-value.green { color: var(--green); }
+.rstat-value.red   { color: var(--red); }
+.rstat-value.amber { color: var(--amber); }
+.rstat-value.accent { color: var(--accent); }
+
+/* ══════════════════════════════════════════
+   FILTER / SORT BAR
+══════════════════════════════════════════ */
+
+.reports-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.filter-tabs {
+  display: flex;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+}
+
+.filter-tab {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.filter-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+
+.filter-tab.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: var(--elev-1);
+}
+
+.filter-tab.active.has-badge {
+  color: var(--amber);
+}
+
+.sort-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: var(--font);
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.sort-select:hover, .sort-select:focus {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+/* ══════════════════════════════════════════
+   TIMELINE LIST
+══════════════════════════════════════════ */
+
+.journal-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: relative;
+}
+
+.journal-timeline::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 24px;
+  bottom: 24px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--border) 8%, var(--border) 92%, transparent);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════
+   JOURNAL CARD
+══════════════════════════════════════════ */
+
+.journal-card-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+/* Timeline dot */
+.timeline-dot {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+}
+
+.timeline-dot-inner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.timeline-dot-inner.win {
+  border-color: var(--green-border);
+  background: var(--green-bg);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.2);
+}
+
+.timeline-dot-inner.loss {
+  border-color: var(--red-border);
+  background: var(--red-bg);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+}
+
+.journal-card {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.journal-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: var(--border);
+  transition: background var(--transition);
+}
+
+.journal-card.win::before  { background: var(--green); }
+.journal-card.loss::before { background: var(--red); }
+
+.journal-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--elev-1);
+}
+

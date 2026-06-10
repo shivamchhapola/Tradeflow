@@ -1,0 +1,130 @@
+---
+description: Avoid duplicating information across UI surfaces; encode the dashboard's information architecture
+alwaysApply: true
+---
+
+# UI Redundancy & Information Architecture
+
+The dashboard shows ~6 cards, a sticky navbar, popovers, tooltips, and toasts — all visible at once. Restating the same fact in two of them isn't reinforcement, it's noise. Pick the right surface, say it once, say it well.
+
+## Core principle: hierarchy of truth
+
+Each fact has exactly **one canonical surface**. Other surfaces may reference it only when they add new information or new framing.
+
+| Fact | Canonical surface | Others may NOT restate |
+| --- | --- | --- |
+| Session / market state (open / closed / pre-open / after-hours / weekend) | Navbar session pill | Card headers, pills, intro lines |
+| User's XP total, level, level progress | Portfolio page + LevelPill popover | Navbar pill (removed), inline cards |
+| Streak count | Navbar streak pill | Card headers, intro lines |
+| Conviction grade (A/B/C) | ScoreCard grade circle | Playbook header, Metrics row (both removed) |
+| Macro bias score | ScoreCard big number | Playbook reasoning shouldn't restate the number, just explain it |
+| Playbook scenario reasoning | "More context" toggle inside Mentor's Take | A separate warning banner shouldn't restate the same thing |
+| Quest progress | QuestCard "X/Y correct" | Don't echo in the navbar |
+| Today's date / time window for a quest | Phase-specific pill (e.g. `Opens 9:15 IST`) | The quest copy itself shouldn't also state the time |
+| Data freshness (when the snapshot was last fetched) | `Updated Xm ago` chip next to the dashboard refresh button (tooltip = absolute IST) | Don't restate inside the score card or in card subtitles |
+
+If a new fact lands and doesn't fit this table, add a row. If you're tempted to put a fact in two rows, you have a problem with your hierarchy, not your UI.
+
+## Information layering — the four reading speeds
+
+A user opens the dashboard with one of four intents. Optimize each card for its primary intent and don't drag content from a slower layer into a faster one.
+
+| Layer | User's question | Time to answer | Surface | Example |
+| --- | --- | --- | --- | --- |
+| **Glance** | "What's the state right now?" | < 1 second | Navbar pills, big numbers, badge colors | Score `-0.014`, grade circle `C`, `Markets closed` pill |
+| **Scan** | "What should I do?" | 5–10 seconds | Card titles, key actions, mentor's take headline | `Today's objective: Weekend — NSE closed` + the action line |
+| **Read** | "Why is it like that?" | 30 seconds | Card body, mentor blurb, metric values | The 4 metric rows, "Watch out" risks |
+| **Drill** | "Tell me everything" | 1+ minute | Tooltips, "More context" toggles, popovers, secondary pages | The "Why:" reasoning behind the toggle, LevelPill popover |
+
+Anti-pattern: pulling Drill-layer content (long reasoning) up into the Scan layer (card body). The fast reader is forced through slow content; the deep reader doesn't get more either.
+
+## Design patterns we use (and why)
+
+### Progressive disclosure
+Collapse non-essential context behind a `More context` toggle. Default state is enough to act on; expanded state explains the why. **Used by**: PlaybookCard mentor's take, ReportCard sections.
+
+### Tooltip for ancillary info
+If a label needs explanation, attach a tooltip — don't restate it in body copy. Hover delay (120ms global) means casual readers skip past, curious readers get the answer. **Used by**: MetricsCard `?` icons, GlobalMarketsTable column headers, streak pill.
+
+### Card single-purpose
+One card, one question answered. If a card needs subheaders to separate concerns, it's two cards.
+- ScoreCard → "How strong is the read, how confident is it?"
+- PlaybookCard → "What should I do today?"
+- MetricsCard → "How is the market behaving, what should I avoid?"
+- QuestCard → "What am I learning today?"
+- GlobalMarketsTable → "Which inputs drove the score?"
+
+If a sixth question shows up, build a sixth card — don't bolt it onto an existing one.
+
+### Phase-aware content
+Copy that's nonsensical on a weekend (or after hours, or pre-open) is a bug, not a feature. Use `sessionLabel` to switch tone:
+- Weekend → review/study framing, not intraday tactics
+- After hours → "wait for tomorrow's run" framing
+- Pre-open → setup framing
+- Intraday → live framing, urgency allowed
+
+**Don't** ship intraday copy as default and trust the user to ignore it on weekends. They won't.
+
+### Naming consistency
+Pick one term per concept and use it everywhere. The dashboard had `Markets closed` (navbar) and `NSE closed` (quest pill) for the exact same state — that was a bug. Per surface, the term may shorten (`Markets closed` → `Closed`) but never change vocabulary (`NSE closed` ≠ `Markets closed`).
+
+### Asymmetric density
+Primary cards (ScoreCard, PlaybookCard) get more vertical space and richer typography. Secondary cards (MetricsCard, GlobalMarketsTable) stay tight. The grid is intentionally `0.9fr 1.1fr` for this reason. Don't add filler to the primary cards to make them "feel balanced" with the secondary ones — the asymmetry is the design.
+
+## Pills specifically
+
+Card-level pills should add information the navbar can't:
+
+- **Good**: `${count} unread`, `Opens 9:15 IST`, `9:00–9:15`, `${count} missed`. These add context unique to the card (counts, timing windows, sub-state).
+- **Bad**: `NSE closed`, `After hours`, `Markets closed`. The navbar already says this — the pill is decoration.
+
+When in doubt: **cover the navbar pill with your hand**. If your card pill is now the only place that fact lives, keep it. If the card still makes sense without it, drop it.
+
+## Copy specifically
+
+Phase-specific intro lines, warning banners, and mentor blurbs are common offenders:
+
+- **Don't** put "Markets are closed for the weekend" in the playbook reasoning, the warning banner, the quest intro, AND the mentor blurb. Pick one.
+- **Don't** explain the score in both the bias label and the mentor blurb if the explanation is identical.
+- **Don't** stack a warning card on top of a playbook card when both convey the same scenario — we deleted that pattern; don't reintroduce it.
+- **Don't** put a phase ("Weekend") in the card title AND a pill (`NSE closed`) AND the intro copy ("It's the weekend…").
+
+## Anti-patterns this codebase has cleaned up (do not reintroduce)
+
+| Pattern | Why it was bad | What replaced it |
+| --- | --- | --- |
+| Standalone weekend warning banner above PlaybookCard | Restated what the Playbook scenario block already said | Banner deleted; warnings render inline inside PlaybookCard, and weekend/after-hours warnings dropped at the source (`playbook.py`) since the scenario title conveys them |
+| `C GRADE` suffix on Playbook header | Grade circle on ScoreCard already says it loudly | Suffix removed |
+| `CONVICTION: Low / Choppy` row in MetricsCard | Same A/B/C grade in a fourth place | Row removed; MetricsCard is now 4 rows of behavior, not 5 |
+| Playbook reasoning paragraph visible by default | Duplicated the mentor's take below it | Hidden behind `More context` toggle |
+| Mentor blurb on closed phases ("Markets are closed…") | Identical to the `Why:` reasoning right below it | `getBeginnerTranslation` returns `null` on closed phases; only live phases get a mentor blurb |
+| `NSE closed` pill in QuestCard weekend header | Duplicate of navbar `Markets closed` | Pill removed (same fix applied to `After hours` pill on postmarket) |
+| XP pill in navbar | Restated XP that lives on Portfolio + LevelPill popover | Pill removed; level pill became a click-to-open popover |
+| Three different terms for the same state (`Markets closed`, `NSE closed`, `closed`) | Naming drift hid the redundancy | Standardized on `Markets closed` |
+
+When you add anything new, check this table. If your addition looks like one of these patterns, you're about to recreate a bug.
+
+## What this rule is NOT
+
+- **Not against accessibility duplication** — aria-labels, screen-reader-only text, tooltip targets, alt text are exempt. They serve a different rendering channel.
+- **Not against same-value-different-render** — a bar chart + the underlying number reinforce each other for different reading styles. That's reinforcement, not noise.
+- **Not against cross-page repetition** — the Trade page can show a session pill too. The rule is about co-visible surfaces on the **same viewport**.
+- **Not a mandate to remove every duplicate** — context that's redundant on the dashboard may be load-bearing in a popover or modal that opens later. Always evaluate co-visibility, not absolute presence.
+
+## The audit checklist
+
+Before shipping a UI change, run this in your head:
+
+1. **Cover-with-hand test, each surface in turn.** Cover the navbar — does any card become unreadable? Cover the score card — does the playbook become incomprehensible? If yes, that surface owns critical state and you shouldn't duplicate it elsewhere. If no, you can probably trim the duplicate.
+2. **Hierarchy table check.** Is the fact you're adding already in the table? If yes, you're restating it. If no, where would it go and why isn't it there yet?
+3. **Layering check.** Is Drill-layer content (long reasoning, full explanations) trying to live in the Scan layer (visible by default)? Move it behind a toggle or tooltip.
+4. **Phase check.** Will this copy still make sense at 11pm on a Saturday? At 9:14am Monday? If it's only correct in one phase, gate it on `sessionLabel`.
+5. **Naming check.** Search the codebase for variant spellings of the concept you just labeled. One term, applied consistently.
+
+## When you find a duplicate
+
+1. Decide which surface owns the fact — usually the most globally visible one (navbar > page > card > pill).
+2. Remove it from the others, not the canonical one.
+3. If removing it leaves a card feeling empty, the card was probably overweighted on that fact — find what unique value it adds instead. (If you can't find one, the card itself is the redundancy.)
+4. Update `TECHNICAL_DETAILS.md` if you've changed an architectural rule about where a fact lives (per `AGENTS.md`).
+5. Mention the removal briefly in chat. Example: *"Dropping the 'NSE closed' pill from QuestCard — duplicates the navbar 'Markets closed'."*

@@ -1,0 +1,6 @@
+[lint]
+# E711: Comparison to `None` should be `cond is None` 
+# (Conflicts with SQLAlchemy / SQLModel standard `== None` / `!= None` query filters)
+# E402: Module level import not at top of file 
+# (Conflicts with calling `load_dotenv()` before importing application modules)
+ignore = ["E711", "E402"]

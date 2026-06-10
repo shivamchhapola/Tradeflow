@@ -1,0 +1,304 @@
+/*
+ * Tradeflow — Buttons, pills, chips, segmented controls.
+ * The trigger-style primitives. Cards/panels live in cards.css.
+ */
+
+/* ── Pill (unified replacement for signal-pill / session-pill / direction tag) ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.pill-bull   { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+.pill-bear   { background: var(--red-bg);   color: var(--red);   border-color: var(--red-border); }
+.pill-flat   { background: rgba(255,255,255,0.05); color: var(--text-muted); border-color: var(--border); }
+.pill-amber  { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
+.pill-blue   { background: var(--blue-bg);  color: var(--blue);  border-color: var(--blue-border); }
+.pill-quest  { background: var(--quest-bg); color: var(--quest); border-color: rgba(167,139,250,0.3); }
+.pill-xp     { background: var(--xp-bg);    color: var(--xp);    border-color: rgba(251,191,36,0.3); }
+.pill-accent { background: var(--accent-soft); color: var(--accent); border-color: rgba(45,212,191,0.3); }
+.pill-muted  { background: var(--bg-surface); color: var(--text-secondary); border-color: var(--border); }
+
+/* Interactive pills act as small popover triggers. Reset native <button>
+   styling and add a hover lift that doesn't override the variant's color. */
+.pill-interactive {
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
+}
+.pill-interactive:hover {
+  filter: brightness(1.15);
+  border-color: var(--border-strong);
+}
+.pill-interactive:active {
+  transform: scale(0.97);
+}
+.pill-interactive:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* ── Level-up pulse ──
+   Fired by NavStats when a user crosses a LEVEL_XP boundary. Same warm-amber
+   palette as the streak flame so it reads as native game-system feedback,
+   not a generic UI alert. Animation is single-shot (1 iteration) — the
+   `pulse` prop in LevelPill clears after ~1.6s, so the class is also
+   removed and the animation can't repeat without a fresh level-up. */
+@keyframes level-pulse-ring {
+  0%   { box-shadow: 0 0 0 0    rgba(245, 158, 11, 0.55); }
+  100% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0);    }
+}
+
+.level-pill-pulse {
+  animation: level-pulse-ring 1.5s ease-out 1;
+}
+
+/* Legacy aliases used across components — kept so we don't have to rename every classname */
+.signal-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.signal-pill.bull { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+.signal-pill.bear { background: var(--red-bg);   color: var(--red);   border-color: var(--red-border); }
+.signal-pill.flat { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); }
+
+.session-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.session-pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+/* ── Segmented control ── */
+.segmented {
+  display: inline-flex;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+  width: 100%;
+}
+
+.segmented-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.segmented-btn:hover {
+  color: var(--text-secondary);
+}
+
+.segmented-btn.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  box-shadow: var(--elev-1);
+}
+
+.segmented-btn.active.bull { color: var(--green); }
+.segmented-btn.active.bear { color: var(--red); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    color var(--transition),
+    transform var(--transition),
+    box-shadow var(--transition),
+    opacity var(--transition);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #00251f;
+  font-weight: 700;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  box-shadow: 0 0 16px var(--accent-ring);
+}
+
+.btn-green {
+  background: var(--green);
+  color: #062b15;
+  font-weight: 700;
+}
+
+.btn-green:hover:not(:disabled) {
+  background: #16a34a;
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.35);
+}
+
+.btn-red {
+  background: var(--red);
+  color: #2b0606;
+  font-weight: 700;
+}
+
+.btn-red:hover:not(:disabled) {
+  background: #dc2626;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.btn-icon {
+  padding: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ── Quest button (kept tasteful — accent gradient, no neon) ── */
+.btn-quest {
+  background: linear-gradient(135deg, var(--accent), #14b8a6);
+  color: #00251f;
+  font-weight: 700;
+  border: none;
+}
+
+.btn-quest:hover:not(:disabled) {
+  box-shadow: 0 0 18px var(--accent-ring);
+}
+
+/* ── User menu trigger overrides ──
+   The "Shivam" trigger had a perceptual issue: on hover the border-color
+   alpha jumped from 0.10 → 0.18 (an 80% relative change) while the text
+   lightness only shifted ~27%. Same 150ms duration, but the border looked
+   like it lit up first. Resting at --border-strong removes that delta —
+   only the background and text now animate on hover. */
+.nav-user-menu-trigger.btn-ghost {
+  border-color: var(--border-strong);
+}
+
+/* Profile dropdown rows — Lucide SVGs were picking up hover separately from
+   the label because `color` wasn't in `.btn`'s transition list (foreground
+   snapped while `background` eased). Keep glyphs on the button's color
+   track and off their own pointer hit-box. */
+.nav-user-menu .btn.btn-ghost svg {
+  flex-shrink: 0;
+  pointer-events: none;
+  display: block;
+}
+
+.nav-user-menu__signout.btn-ghost svg {
+  color: inherit;
+}
+
+/* ── Filter chips ── */
+.chip-group {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+}
+
+.chip {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.3px;
+}
+
+.chip:hover { color: var(--text-secondary); }
+
+.chip.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}

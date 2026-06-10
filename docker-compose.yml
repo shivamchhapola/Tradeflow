@@ -1,0 +1,35 @@
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the whole backend directory for hot-reloading
+      - ./backend:/app/backend
+      # Mount the database and settings from the root
+      - ./tradeflow.db:/app/tradeflow.db
+      - ./settings.json:/app/settings.json
+      - ./backend/.env:/app/backend/.env
+    # host.docker.internal allows the Docker container to talk to your local Windows Ollama installation
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount frontend code for hot-reloading
+      - ./frontend:/app
+      # Prevent local node_modules from overriding the container's
+      - /app/node_modules
+    environment:
+      - VITE_API_PROXY_TARGET=http://backend:8000
+    depends_on:
+      - backend
+

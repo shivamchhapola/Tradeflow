@@ -1,0 +1,399 @@
+/* ── Trade ticket drawer (floating overlay on the right) ─────────────────── */
+
+.trade-ticket-drawer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 272px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border-strong);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.45);
+  animation: tickerSlideIn 0.2s ease;
+}
+
+@keyframes tickerSlideIn {
+  from { transform: translateX(272px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+/* ── Trade ticket block ───────────────────────────────────────────────────── */
+
+.trade-ticket {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.trade-ticket.ticket-call { border-top: 3px solid var(--red); }
+.trade-ticket.ticket-put  { border-top: 3px solid var(--green); }
+
+.ticket-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.ticket-contract {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ticket-contract strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.ticket-ltp {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.ticket-close-btn {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.ticket-close-btn:hover { color: var(--text-primary); }
+
+.ticket-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.ticket-foot {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Direction toggle */
+.ticket-dir-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.ticket-dir-btn {
+  padding: 10px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ticket-dir-btn.active.buy {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.45);
+  color: var(--green);
+}
+
+.ticket-dir-btn.active.sell {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: var(--red);
+}
+
+/* Fields */
+.ticket-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ticket-field label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.ticket-dir-hint {
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: none;
+  color: var(--amber);
+  letter-spacing: 0;
+}
+
+.ticket-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ticket-field input {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+}
+
+.ticket-field input:focus {
+  border-color: var(--accent);
+}
+
+/* Stepper */
+.ticket-stepper {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  gap: 6px;
+  align-items: center;
+}
+
+.ticket-stepper button {
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+}
+
+.ticket-stepper button:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.ticket-stepper input { text-align: center; }
+
+.ticket-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ticket-link-btn {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ticket-presets {
+  display: flex;
+  gap: 4px;
+}
+
+.ticket-preset {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 5px;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.ticket-preset:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-strong);
+}
+
+/* Visual SL → entry → Target range bar */
+.ticket-range {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ticket-range-track {
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: 3px;
+  position: relative;
+  overflow: visible;
+  border: 1px solid var(--border);
+}
+
+.t-range-risk {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(239, 68, 68, 0.35);
+  border-radius: 3px;
+}
+
+.t-range-reward {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(34, 197, 94, 0.35);
+  border-radius: 3px;
+}
+
+.t-range-entry {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 2px solid var(--bg-card);
+  border-radius: 50%;
+}
+
+.ticket-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* Validation warning */
+.ticket-warn {
+  font-size: 10px;
+  color: var(--amber);
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  line-height: 1.4;
+}
+
+/* Risk summary card */
+.ticket-risk-card {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ticket-risk-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ticket-risk-row b {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Submit button */
+.ticket-submit {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.ticket-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ticket-submit.buy  { background: var(--green); color: #041008; }
+.ticket-submit.sell { background: var(--red);   color: #fff; }
+.ticket-submit:not(:disabled):hover { filter: brightness(1.06); }
+.option-badge {
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.option-badge.call {
+  color: var(--red);
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+}
+
+.option-badge.put {
+  color: var(--green);
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+}
+
+/* ── Help text ─────────────────────────────────────────────────────────── */
+
+.trade-help-text {
+  border-bottom: 1px dashed var(--border-strong);
+  cursor: help;
+}
+
+.trade-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.trade-tip-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  z-index: 50;
+  pointer-events: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  text-transform: none;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+

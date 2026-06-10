@@ -1,0 +1,46 @@
+/*
+ * Tradeflow — Design System entry point.
+ *
+ * The actual rules live in ./styles/ — this file just orders the imports.
+ * Load order matters: tokens first (everything depends on them), then
+ * layout primitives, then the styled components built on top.
+ *
+ * If you're adding new styles:
+ *   - new design token         → tokens.css
+ *   - new layout / grid        → layout.css
+ *   - new button / pill / chip → buttons.css
+ *   - new card variant         → cards.css
+ *   - new dashboard widget     → dashboard.css
+ *   - new form / modal         → forms.css
+ *   - new loading / empty / error state → states.css
+ *
+ * Don't add rules to this file directly. If a style genuinely doesn't fit
+ * any of the buckets above, that's a signal to either split off a new file
+ * or rethink where the component lives. See .cursor/rules/modularization.mdc.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+@import "./styles/tokens.css";
+@import "./styles/layout.css";
+@import "./styles/buttons.css";
+@import "./styles/cards.css";
+@import "./styles/dashboard.css";
+@import "./styles/forms.css";
+@import "./styles/states.css";
+
+/* Trade Module */
+@import "./styles/trade.css";
+@import "./styles/trade-chain.css";
+@import "./styles/trade-chart.css";
+@import "./styles/trade-ticket.css";
+@import "./styles/trade-positions.css";
+
+@import "./styles/portfolio.css";
+
+/* Reports Module */
+@import "./styles/reports.css";
+@import "./styles/reports-cards.css";
+
+@import "./styles/learn.css";
+@import "./styles/settings.css";

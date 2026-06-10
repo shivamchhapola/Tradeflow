@@ -1,0 +1,400 @@
+/*
+ * Tradeflow — App shell layout.
+ * Nav (sticky top), main content container, grid systems, glossary,
+ * and the global responsive breakpoints.
+ */
+
+/* ── App Layout ── */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 8, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: var(--space-4);
+}
+
+/* ── Electron Desktop Titlebar Integration ──
+   Applied only when Electron injects `class="electron"` on <body>.
+   We use a fully frameless window (frame: false) and draw our own HTML
+   close/minimize/maximize buttons via the <WindowControls /> component. */
+
+body.electron .nav {
+  -webkit-app-region: drag;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  padding-top: 0;
+  padding-bottom: 0;
+  /* Reserve space on the right for our absolute-positioned window controls */
+  padding-right: 152px;
+  position: relative;
+}
+
+/* Ensure child elements don't get trapped by the drag region */
+body.electron .nav-links a,
+body.electron .nav-user-menu-trigger,
+body.electron .nav-brand {
+  -webkit-app-region: no-drag;
+}
+
+/* ── Custom Window Controls (Electron only) ── */
+.window-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 48px;
+  display: flex;
+  -webkit-app-region: no-drag;
+  z-index: 1000;
+}
+
+.window-control-btn {
+  width: 46px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: default;
+  transition: background 0.1s;
+}
+
+.window-control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.window-control-btn.close-btn:hover {
+  background: #e81123;
+  color: #fff;
+}
+
+/* Interactive children must opt out of the drag region */
+body.electron .nav-links a,
+body.electron .nav-user-menu-trigger,
+body.electron .nav-brand {
+  -webkit-app-region: no-drag;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.nav-brand-mark {
+  /* Same SVG as the browser favicon (frontend/public/tradeflow.svg) so the
+     tab icon and navbar mark always match. Previous placeholder was a plain
+     teal gradient square — it drifted from the real brand mark which has a
+     chart line motif. Width/height repeated as attributes on the <img> too,
+     so the layout doesn't reflow if CSS loads late. */
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2px;
+}
+
+.nav-links a {
+  position: relative;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
+}
+
+.nav-links a:hover {
+  color: var(--text-secondary);
+  background: var(--bg-card);
+}
+
+.nav-links a.active {
+  color: var(--text-primary);
+}
+
+.nav-links a.active::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 8px var(--accent-ring);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  padding: var(--space-6);
+  width: 100%;
+  justify-content: center;
+}
+
+/* Generic page container — used by Portfolio, Reports, and any other
+   standard-width page. Matches .dashboard-container so all pages sit
+   at the same max-width and are centred by .main's justify-content. */
+.page {
+  max-width: 1240px;
+  width: 100%;
+}
+
+/* Auth pages get zero padding so auth-shell fills full width */
+.main.main-auth {
+  padding: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* ── Grid Layouts ── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+/* Two-column dashboard with independent vertical stacks.
+   Each .stack manages its own card flow, so a tall card on one side doesn't
+   stretch the cards on the other side. Columns collapse to 1fr below 900 px. */
+.dashboard-grid {
+  display: grid;
+  /* Slight asymmetry: left (Score/Playbook/Metrics) is text-heavy and reads
+     fine narrower; right (Quest + 5-column Global Markets table) genuinely
+     benefits from the extra ~30 px. Kept subtle on purpose — anything more
+     asymmetric crowds the score number and grade circle on the left. */
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0; /* prevent flex children from overflowing the column */
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* ── Glossary ── */
+.glossary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.gloss-item {
+  padding: var(--space-3);
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+}
+
+.gloss-term {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.gloss-def {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ── Mobile bottom nav ──
+   Hidden by default; revealed at ≤ 768 px in the responsive block below.
+   Glow on the active tab uses the same accent-soft + ring tokens as the
+   live-session dot and streak flame, so the bar feels native to Tradeflow
+   instead of a copied iOS / Material chrome. */
+.bottom-nav {
+  display: none;
+}
+
+.bottom-nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 0 4px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  /* Big tap target — Apple HIG says 44 px minimum; we get ~56 px including
+     the safe-area padding on devices that report inset-bottom. */
+  min-height: 52px;
+  position: relative;
+  /* Only color transitions on the link itself; the icon halo handles its
+     own background/box-shadow eases so we don't double-animate them. */
+  transition: color var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-tab:hover {
+  color: var(--text-secondary);
+}
+
+.bottom-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  /* Subtle: the active "halo" pill grows in from nothing on activation.
+     Keeps the indicator legible without the visual noise of an underline
+     bar that has to chase the active tab. */
+  transition:
+    background var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.bottom-nav-tab.active {
+  color: var(--accent);
+}
+
+.bottom-nav-tab.active .bottom-nav-icon {
+  background: var(--accent-soft);
+  box-shadow: 0 0 12px var(--accent-ring);
+}
+
+.bottom-nav-tab:active .bottom-nav-icon {
+  /* Tactile press feedback — restores in ~150 ms on release. Keeps the
+     glow palette but adds the physical "I tapped that" cue. */
+  transform: scale(0.92);
+}
+
+.bottom-nav-tab:focus-visible {
+  outline: none;
+}
+
+.bottom-nav-tab:focus-visible .bottom-nav-icon {
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .glossary-grid { grid-template-columns: 1fr; }
+  .nav { padding: 10px 16px; }
+  .main { padding: var(--space-4); }
+}
+
+/* Phone-ish: switch nav to bottom-tab pattern. 768 covers iPhone landscape
+   and small tablets in portrait. We bump iPad mini portrait (768 exactly)
+   into mobile mode because the desktop nav-links are still tight there. */
+@media (max-width: 768px) {
+  .nav {
+    padding: 8px 14px;
+    gap: var(--space-3);
+  }
+
+  /* Top nav-links collapse into the bottom tab bar so the header doesn't
+     try to fit 4 routes + 3 pills + a user menu on a 390 px viewport. */
+  .nav-links { display: none; }
+
+  /* Username text → hidden; the User icon alone is enough as the trigger.
+     Full label is still rendered inside the dropdown header. */
+  .nav-user-menu-label { display: none; }
+
+  .nav-user-menu-trigger.btn-ghost {
+    padding: 6px 8px;
+  }
+
+  /* Reveal the bottom tab bar. position:fixed pinned to the viewport with
+     safe-area padding for notched devices. */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: rgba(8, 8, 10, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Push page content above the fixed bar so the last card isn't hidden
+     under it. 56px (bar) + safe-area + 8px breather. */
+  .main {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 600px) {
+  .score-value { font-size: 36px; }
+  .stat-card.hero .stat-value { font-size: 28px; }
+}
+
+/* Very small phones (iPhone SE / mini, foldable inner displays): drop the
+   "Tradeflow" wordmark so the top bar can still fit brand + 3 pills. The
+   SVG mark stays — it's the favicon, users still recognize it. */
+@media (max-width: 480px) {
+  .nav { padding: 8px 12px; gap: 8px; }
+  .nav-brand-text { display: none; }
+}

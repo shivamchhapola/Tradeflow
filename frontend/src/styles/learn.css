@@ -1,0 +1,154 @@
+/*
+ * Tradeflow — Learn Page Styles
+ */
+
+.learn-container {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.learn-header {
+  margin-bottom: var(--space-6);
+}
+
+.learn-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.learn-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.lesson-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.lesson-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+
+.lesson-card.is-open {
+  border-color: var(--border-strong);
+}
+
+.lesson-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition);
+}
+
+.lesson-header:hover {
+  background: var(--bg-card-hover);
+}
+
+.lesson-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lesson-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lesson-summary {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.lesson-icon {
+  color: var(--text-muted);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+  margin-left: var(--space-4);
+}
+
+.lesson-card.is-open .lesson-icon {
+  transform: rotate(180deg);
+}
+
+.lesson-body {
+  padding: 0 var(--space-5) var(--space-5);
+  border-top: 1px solid var(--border);
+  margin-top: -1px; /* collapse border if closed */
+  display: none;
+}
+
+.lesson-card.is-open .lesson-body {
+  display: block;
+  animation: slideDown 0.3s ease forwards;
+}
+
+.lesson-content {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.lesson-content h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: var(--space-2);
+}
+
+.lesson-content ul {
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lesson-content li {
+  list-style-type: disc;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .lesson-header {
+    padding: var(--space-4);
+  }
+  .lesson-body {
+    padding: 0 var(--space-4) var(--space-4);
+  }
+  .learn-title {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,158 @@
+/*
+ * Tradeflow — Design tokens, base styles, and accessibility primitives.
+ * Owned by App.css's @import chain. Loaded first; nothing else depends on
+ * import order beyond this.
+ */
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ── Tokens ── */
+:root {
+  /* Layered backgrounds — visible separation between every level */
+  --bg-primary: #08080a;
+  --bg-secondary: #101014;
+  --bg-card: #16161b;
+  --bg-card-hover: #1d1d24;
+  --bg-surface: #24242c;
+  --bg-elevated: #2c2c36;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-focus: rgba(45, 212, 191, 0.55);
+
+  /* Text — text-muted bumped from #7c7c87 (4.3:1 — fails AA at 12px) to
+     #909099 (~5.5:1 — clears AA for normal text on --bg-card). Preserves
+     hierarchy under --text-secondary while staying legible for meta info. */
+  --text-primary: #f4f4f7;
+  --text-secondary: #b8b8c2;
+  --text-muted: #909099;
+
+  /* Brand accent — mint cyan, used for nav, focus ring, brand mark */
+  --accent: #2dd4bf;
+  --accent-hover: #5eead4;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --accent-ring: rgba(45, 212, 191, 0.35);
+
+  /* Direction / sentiment */
+  --green: #22c55e;
+  --green-bg: rgba(34, 197, 94, 0.12);
+  --green-border: rgba(34, 197, 94, 0.30);
+  --red: #ef4444;
+  --red-bg: rgba(239, 68, 68, 0.12);
+  --red-border: rgba(239, 68, 68, 0.30);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245, 158, 11, 0.12);
+  --amber-border: rgba(245, 158, 11, 0.30);
+  --blue: #3b82f6;
+  --blue-bg: rgba(59, 130, 246, 0.12);
+  --blue-border: rgba(59, 130, 246, 0.30);
+
+  /* Game accents — promoted from random hex literals */
+  --xp: #fbbf24;
+  --xp-bg: rgba(251, 191, 36, 0.12);
+  --streak: #fb923c;
+  --streak-bg: rgba(251, 146, 60, 0.12);
+  --quest: #a78bfa;
+  --quest-bg: rgba(167, 139, 250, 0.12);
+
+  /* Spacing scale — kills magic numbers in inline styles */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Radii */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --radius-pill: 100px;
+
+  /* Elevation — depth from shadow rather than just layering */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --elev-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --elev-glow: 0 0 16px var(--accent-ring);
+
+  /* Typography */
+  --font: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  --transition: 0.15s ease;
+  --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Base ── */
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Tabular numerics anywhere a price/score/PnL appears */
+.mono,
+.num,
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ── Focus visible — replaces the bare `outline:none` everywhere ── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+.btn:focus-visible {
+  outline-offset: 3px;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

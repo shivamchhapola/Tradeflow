@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+yfinance
+requests
+apscheduler
+python-dotenv
+aiofiles
+pytz
+bcrypt
+pyjwt
+email-validator
+sqlmodel
+fastapi-cache2
+jinja2
+ruff
+groq

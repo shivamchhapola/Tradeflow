@@ -1,0 +1,330 @@
+/* ── Positions bar (horizontal card strip) ──────────────────────────────── */
+
+.pos-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+  height: 96px;
+  padding: 0 12px;
+  overflow: hidden;
+}
+
+.pos-bar-empty {
+  justify-content: center;
+}
+
+.pos-bar-empty-text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pos-bar-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  flex-shrink: 0;
+  margin-right: 10px;
+  line-height: 1;
+}
+
+.pos-bar-count {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 9px;
+  padding: 1px 4px;
+  margin-left: 2px;
+  writing-mode: initial;
+  transform: none;
+}
+
+.pos-bar-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 1;
+  padding: 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.pos-bar-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+
+.pos-bar-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ── Position card ──────────────────────────────────────────────────────── */
+
+.pos-card {
+  flex-shrink: 0;
+  width: 196px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s;
+}
+
+.pos-card-profit {
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.pos-card-loss {
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
+/* Top row */
+.pos-card-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pos-card-instrument {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-card-dir {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+.pos-card-dir.buy {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--green);
+}
+
+.pos-card-dir.sell {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--red);
+}
+
+.pos-card-actions {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.pos-card-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pos-card-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.pos-card-exit {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--red);
+}
+
+.pos-card-exit:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.pos-card-exit.exiting {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pos-card-confirm {
+  border-color: rgba(34, 197, 94, 0.3);
+  color: var(--green);
+}
+
+.pos-card-confirm:hover {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.pos-card-cancel {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--red);
+}
+
+/* Adjust inline form */
+.pos-card-adjust-form {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.pos-card-input {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.pos-card-select {
+  height: 24px;
+  font-size: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  padding: 0 2px;
+  width: 54px;
+}
+
+/* Price row */
+.pos-card-prices {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.pos-card-entry {
+  color: var(--text-secondary);
+}
+
+.pos-card-arrow {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.pos-card-ltp {
+  font-weight: 700;
+}
+
+.pos-card-ltp.muted {
+  color: var(--text-muted);
+}
+
+/* P&L */
+.pos-card-pnl {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pos-card-pnl.muted {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* SL→LTP→Target progress track */
+.pos-card-track-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.pos-card-track-sl {
+  font-size: 9px;
+  color: var(--red);
+  opacity: 0.7;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+.pos-card-track-tgt {
+  font-size: 9px;
+  color: var(--green);
+  opacity: 0.7;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+.pos-card-track {
+  flex: 1;
+  height: 3px;
+  background: var(--bg-surface);
+  border-radius: 2px;
+  position: relative;
+  overflow: visible;
+}
+
+.pos-card-track-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.pos-card-track-fill.fill-profit {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.4) 0%, var(--green) 100%);
+}
+
+.pos-card-track-fill.fill-loss {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.4) 0%, var(--red) 100%);
+}
+
+.pos-card-track-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1.5px solid var(--bg-card);
+  transition: left 0.4s ease;
+}
+/* ── Positions: net P&L ─────────────────────────────────────────────── */
+
+.pos-net-pnl {
+  display: block;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  margin-top: 2px;
+  writing-mode: initial;
+  transform: none;
+  letter-spacing: 0;
+}
+
+/* ── Card slide-in animation ─────────────────────────────────────────── */
+
+@keyframes cardSlideIn {
+  from { transform: translateX(-12px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+.pos-card {
+  animation: cardSlideIn 0.25s ease;
+}
