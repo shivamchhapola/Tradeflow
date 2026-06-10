@@ -1,7 +1,7 @@
 {
   "name": "desktop",
   "version": "0.1.0",
-  "description": "",
+  "description": "An interactive FnO learning platform with paper trading, pre-market analysis, and AI-powered mentor reports.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
