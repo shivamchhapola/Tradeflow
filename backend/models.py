@@ -87,3 +87,15 @@ class UserAchievement(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", primary_key=True)
     achievement_id: str = Field(foreign_key="achievements.id", primary_key=True)
     earned_at: str
+
+class Notification(SQLModel, table=True):
+    __tablename__ = "notifications"  # type: ignore
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    type: str = Field(index=True)  # trade_executed, stop_hit, target_hit, manual_close, auto_squareoff, system_error, info, warning
+    title: str
+    message: str
+    details: Optional[str] = None
+    is_read: bool = Field(default=False, index=True)
+    created_at: str = Field(index=True)
+

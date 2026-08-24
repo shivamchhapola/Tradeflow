@@ -38,7 +38,6 @@ def settings_configuration_status(current_user: User = Depends(get_current_user)
     return check_settings_configured()
 
 
-
 # ── PUT /api/settings ──
 
 class SettingsUpdate(BaseModel):

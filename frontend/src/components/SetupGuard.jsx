@@ -33,6 +33,7 @@ export default function SetupGuard({ children }) {
       }
     } catch (err) {
       console.warn("Failed to check configuration status:", err);
+      setIsConfigured(false);
     } finally {
       setChecked(true);
     }
@@ -41,6 +42,19 @@ export default function SetupGuard({ children }) {
   useEffect(() => {
     checkStatus();
   }, [checkStatus]);
+
+  const isAllowedPath =
+    location.pathname === "/settings" ||
+    location.pathname === "/login" ||
+    location.pathname === "/signup";
+
+  if (!checked && user && !isAllowedPath) {
+    return null;
+  }
+
+  if (!isConfigured && user && !isAllowedPath) {
+    return null;
+  }
 
   return children;
 }
