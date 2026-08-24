@@ -8,8 +8,9 @@ XP is awarded for process (setting SL, writing thesis), not profit.
 from datetime import date, datetime, timedelta
 from sqlmodel import Session, select, col, func
 from models import PaperTrade, UserStat
-from database import _award_badge
+from database import _award_badge, create_notification
 from engine.quest_phases import now_ist
+
 
 XP_RULES = {
     "logged_trade":   10,
@@ -140,6 +141,16 @@ def open_trade(
     session.refresh(trade)
 
     assert trade.id is not None
+
+    create_notification(
+        session=session,
+        user_id=user_id,
+        type="trade_executed",
+        title=f"Trade Placed: {instrument}",
+        message=f"{direction} {quantity} qty @ ₹{entry_price:.2f} · SL ₹{stop_loss:.2f} · TGT ₹{target:.2f}",
+        details=f"Trade ID: #{trade.id}\nInstrument: {instrument}\nDirection: {direction}\nQuantity: {quantity}\nEntry: ₹{entry_price:.2f}\nStop Loss: ₹{stop_loss:.2f}\nTarget: ₹{target:.2f}\nThesis: {thesis or 'None'}",
+    )
+
     return trade.id
 
 def close_trade(
@@ -194,8 +205,26 @@ def close_trade(
     if len(last_20) == 20 and all(t.thesis and t.thesis.strip() for t in last_20):
         _award_badge(session, user_id, "thesis_trader", trade.closed_at)
         
+    pnl_str = f"+₹{pnl:,.2f}" if pnl >= 0 else f"-₹{abs(pnl):,.2f}"
+    reason_map = {
+        "target_hit": ("target_hit", "Target Hit 🎯"),
+        "stop_hit": ("stop_hit", "Stop Loss Hit 🛑"),
+        "auto_squareoff": ("auto_squareoff", "Auto Squared Off ⏰"),
+    }
+    n_type, n_title_prefix = reason_map.get(exit_reason, ("manual_close", "Position Closed 🚪"))
+
+    create_notification(
+        session=session,
+        user_id=user_id,
+        type=n_type,
+        title=f"{n_title_prefix}: {trade.instrument}",
+        message=f"Closed @ ₹{exit_price:.2f} · P&L {pnl_str}",
+        details=f"Trade ID: #{trade.id}\nInstrument: {trade.instrument}\nExit Reason: {exit_reason}\nEntry Price: ₹{trade.entry_price:.2f}\nExit Price: ₹{exit_price:.2f}\nQuantity: {trade.quantity}\nP&L: {pnl_str}",
+    )
+
     session.commit()
     return pnl
+
 
 def get_open_trades(session: Session, user_id: int) -> list[PaperTrade]:
     return list(session.exec(

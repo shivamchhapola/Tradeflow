@@ -5,28 +5,37 @@ from datetime import datetime
 
 import pytz
 
-from data.nse_session import NSE_HEADERS, get_nse_session, invalidate_nse_session
+from data.nse_session import (
+    get_nse_base_url,
+    get_nse_headers,
+    get_nse_session,
+    invalidate_nse_session,
+)
 
 log = logging.getLogger(__name__)
 
 IST = pytz.timezone("Asia/Kolkata")
 
-_INDEX_REFERER = "https://www.nseindia.com/"
-_INDEX_CHART_URL = (
-    "https://www.nseindia.com/api/NextApi/apiClient/indexTrackerApi"
-    "?functionName=getIndexChart&&index=NIFTY%2050&flag=1D"
-)
-
 
 def _fetch_index_chart_payload() -> dict:
     """Warm session + fetch index chart JSON. Retries once on 401/403."""
+    base_url = get_nse_base_url()
+    if not base_url:
+        raise ValueError("NSE Base URL is not configured in settings")
+
+    chart_url = (
+        f"{base_url}/api/NextApi/apiClient/indexTrackerApi"
+        "?functionName=getIndexChart&&index=NIFTY%2050&flag=1D"
+    )
+    referer = f"{base_url}/"
+
     last_error = None
     for attempt in (1, 2):
         session = get_nse_session()
         try:
             response = session.get(
-                _INDEX_CHART_URL,
-                headers={**NSE_HEADERS, "Referer": _INDEX_REFERER},
+                chart_url,
+                headers={**get_nse_headers(), "Referer": referer},
                 timeout=15,
             )
             if response.status_code in (401, 403) and attempt == 1:

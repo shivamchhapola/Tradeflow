@@ -8,6 +8,7 @@ import WindowControls from "./WindowControls";
 import useMarketSession from "../../hooks/useMarketSession";
 import { useAuth } from "../../context/AuthContext";
 import { NAV } from "../../lib/copy";
+import NotificationBell from "../notifications/NotificationBell";
 
 const LEVEL_XP = 500;
 
@@ -44,6 +45,7 @@ export default function Nav() {
         <div className="nav-right">
           <SessionPill />
           <NavStats />
+          <NotificationBell />
           <UserMenu />
         </div>
       )}
@@ -52,6 +54,7 @@ export default function Nav() {
     </nav>
   );
 }
+
 
 function SessionPill() {
   const { phase, label } = useMarketSession();

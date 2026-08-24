@@ -8,12 +8,16 @@ import {
 import { Tooltip } from "react-tooltip";
 import AuthWrapper from "./components/AuthWrapper";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
+import SetupGuard from "./components/SetupGuard";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Nav from "./components/layout/Nav";
 import BottomNav from "./components/layout/BottomNav";
 import { RouteFallback, NotFound } from "./components/layout/RouteFallback";
+
+import { NotificationProvider } from "./context/NotificationContext";
+import ErrorDetailsModal from "./components/notifications/ErrorDetailsModal";
 
 import "react-tooltip/dist/react-tooltip.css";
 import "./App.css";
@@ -47,6 +51,7 @@ function AppContent() {
         </Suspense>
       </main>
       <BottomNav />
+      <ErrorDetailsModal />
     </div>
   );
 }
@@ -57,7 +62,11 @@ export default function App() {
       <BrowserRouter>
         <AuthWrapper>
           <ErrorBoundary>
-            <AppContent />
+            <NotificationProvider>
+              <SetupGuard>
+                <AppContent />
+              </SetupGuard>
+            </NotificationProvider>
           </ErrorBoundary>
         </AuthWrapper>
       </BrowserRouter>
@@ -74,5 +83,6 @@ export default function App() {
     </>
   );
 }
+
 
 

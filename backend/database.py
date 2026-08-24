@@ -6,9 +6,63 @@ from sqlmodel import SQLModel, Session, create_engine, select
 import platformdirs
 
 # Import models so SQLModel metadata registry detects them
-from models import User, UserStat, Achievement, UserAchievement, PaperTrade, DailyQuest
+from models import User, UserStat, Achievement, UserAchievement, PaperTrade, DailyQuest, Notification
 
 log = logging.getLogger("tradeflow.database")
+
+MAX_NOTIFICATIONS = 10000
+PRUNE_BATCH = 1000
+
+def create_notification(
+    session: Session,
+    user_id: int,
+    type: str,
+    title: str,
+    message: str,
+    details: str | None = None,
+) -> Notification:
+    """
+    Creates a notification for `user_id`.
+    Maintains a maximum of 10,000 notifications per user by deleting the oldest 1,000
+    when the limit is reached.
+    """
+    from sqlmodel import col, func, delete
+    from engine.quest_phases import now_ist
+
+    count = session.exec(
+        select(func.count(col(Notification.id)))
+        .where(Notification.user_id == user_id)
+    ).one() or 0
+
+    if count >= MAX_NOTIFICATIONS:
+        subq = (
+            select(Notification.id)
+            .where(Notification.user_id == user_id)
+            .order_by(col(Notification.id).asc())
+            .limit(PRUNE_BATCH)
+        )
+        oldest_ids = list(session.exec(subq).all())
+        if oldest_ids:
+            session.exec(
+                delete(Notification).where(col(Notification.id).in_(oldest_ids))
+            )
+            session.flush()
+
+    now_iso = now_ist().isoformat()
+    notification = Notification(
+        user_id=user_id,
+        type=type,
+        title=title,
+        message=message,
+        details=details,
+        is_read=False,
+        created_at=now_iso,
+    )
+    session.add(notification)
+    session.commit()
+    session.refresh(notification)
+    return notification
+
 
 # Smart path resolution for SQLite database
 _dev_db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "tradeflow.db"))

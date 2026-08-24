@@ -18,7 +18,7 @@ export default function WindowControls() {
   }, []);
 
   if (!window.electronAPI) {
-    return <div style={{ color: 'red', zIndex: 9999 }}>NO API</div>;
+    return null;
   }
 
   return (

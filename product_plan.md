@@ -233,6 +233,18 @@ Multiple rows may share the same `date`: each `/api/analysis/run` appends a snap
 | expired_at | TEXT | ISO timestamp set when auto-expired by phase change |
 | `UNIQUE(date, phase)` | | One quest per phase per day |
 
+### `notifications`
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INTEGER PK | Auto-increment |
+| user_id | INTEGER FK | FK → `users.id` (indexed) |
+| type | TEXT | `trade_executed`, `stop_hit`, `target_hit`, `manual_close`, `auto_squareoff`, `system_error`, `info`, `warning` |
+| title | TEXT | Short digestible title |
+| message | TEXT | Short digestible summary |
+| details | TEXT | Full error stack trace / response payload (optional) |
+| is_read | BOOLEAN | Read flag (default `false`) |
+| created_at | TEXT | ISO IST timestamp |
+
 ---
 
 ## API Surface
@@ -251,6 +263,15 @@ Multiple rows may share the same `date`: each `/api/analysis/run` appends a snap
 | `GET` | `/api/option-chain?symbol=NIFTY` | Nearest expiry chain (LTP/OI + % change fields from NSE) |
 | `GET` | `/api/nifty-chart` | NIFTY 50 cash-index candlestick chart (returns legacy `points` + new structured `candles`) |
 | `GET` | `/api/option-candles?identifier=...` | Selected NIFTY option premium 5m candlestick chart |
+
+### Notifications
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/notifications` | Paginated notifications (cursor `before_id`, `limit`, `unread_only`, `type_category`) |
+| `GET` | `/api/notifications/{id}` | Single notification with full details |
+| `POST` | `/api/notifications` | Create notification |
+| `POST` | `/api/notifications/mark-read` | Mark specified IDs or all notifications as read |
+| `DELETE` | `/api/notifications/clear` | Delete all read notifications for current user |
 
 ### Paper Trades
 | Method | Endpoint | Description |
@@ -273,6 +294,15 @@ Multiple rows may share the same `date`: each `/api/analysis/run` appends a snap
 | `POST` | `/api/quests/today` | `{ status: "accepted" }` to mark intent (no XP) |
 | `POST` | `/api/quests/today/answer` | `{ question_id, answer }` → validates, scores, awards XP on the last answer |
 | `GET` | `/api/quests/recent?limit=5` | Last N settled quests for the success-rate dot strip |
+
+### Settings
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/settings` | Get current runtime configuration (API keys masked) |
+| `PUT` | `/api/settings` | Deep-merge update to `settings.json` |
+| `GET` | `/api/settings/status` | Configuration status: `{ is_configured: bool, missing: list[str] }` |
+| `GET` | `/api/settings/llm/status` | Health check active LLM provider |
+| `POST` | `/api/settings/llm/test` | Test prompt to verify LLM connection |
 
 ### Auth (app-level)
 | Method | Endpoint | Description |
