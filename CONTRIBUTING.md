@@ -20,13 +20,22 @@ You can run the app locally using the provided scripts:
 
 This will spin up both the FastAPI backend and the Vite frontend concurrently.
 
+## Branching Strategy
+
+- **`main`**: Production-ready, stable code. **Direct pushes to `main` are strictly prohibited.**
+- **`feature/<name>`**: New user-facing features or major enhancements (e.g. `feature/notifications`).
+- **`fix/<name>`**: Bug fixes and security patches (e.g. `fix/setup-guard`).
+- **`chore/<name>`**: Refactoring, dependency updates, build tooling, or environment configuration (e.g. `chore/deps-security-fix`).
+- **`docs/<name>`**: Documentation improvements (e.g. `docs/branching-strategy`).
+
 ## Pull Request Process
 
-1. Create a new branch for your feature: `git checkout -b feature/your-feature-name`
-2. Commit your changes with descriptive messages.
-3. Push your branch to your fork.
-4. Open a Pull Request against the `main` branch of the upstream repository.
-5. Provide a clear description of the problem you're solving and how you've implemented the solution.
+1. Create a new topic branch from the latest `main`:
+   `git checkout -b <type>/<descriptive-name>`
+2. Implement your changes adhering to project guidelines.
+3. Commit with Conventional Commit messages (e.g. `feat: ...`, `fix: ...`, `chore: ...`).
+4. Push your branch to `origin/<type>/<descriptive-name>`.
+5. Open a Pull Request targeting `main`. Ensure all build and verification steps (`npm run build`, python compilation) pass cleanly before merging.
 
 ## Code of Conduct
 
