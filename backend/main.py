@@ -33,6 +33,7 @@ from routes.trades import router as trades_router
 from routes.quests import router as quests_router
 from routes.reports import router as reports_router
 from routes.settings import router as settings_router
+from routes.notifications import router as notifications_router
 
 
 @asynccontextmanager
@@ -72,6 +73,8 @@ app.include_router(trades_router)
 app.include_router(quests_router)
 app.include_router(reports_router)
 app.include_router(settings_router)
+app.include_router(notifications_router)
+
 
 # Serve Frontend Static Files
 import sys

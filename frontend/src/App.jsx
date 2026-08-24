@@ -15,6 +15,9 @@ import Nav from "./components/layout/Nav";
 import BottomNav from "./components/layout/BottomNav";
 import { RouteFallback, NotFound } from "./components/layout/RouteFallback";
 
+import { NotificationProvider } from "./context/NotificationContext";
+import ErrorDetailsModal from "./components/notifications/ErrorDetailsModal";
+
 import "react-tooltip/dist/react-tooltip.css";
 import "./App.css";
 
@@ -47,6 +50,7 @@ function AppContent() {
         </Suspense>
       </main>
       <BottomNav />
+      <ErrorDetailsModal />
     </div>
   );
 }
@@ -57,7 +61,9 @@ export default function App() {
       <BrowserRouter>
         <AuthWrapper>
           <ErrorBoundary>
-            <AppContent />
+            <NotificationProvider>
+              <AppContent />
+            </NotificationProvider>
           </ErrorBoundary>
         </AuthWrapper>
       </BrowserRouter>
@@ -74,5 +80,6 @@ export default function App() {
     </>
   );
 }
+
 
 

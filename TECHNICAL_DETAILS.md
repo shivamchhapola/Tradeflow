@@ -310,3 +310,37 @@ display them, (c) a recompute job for retroactive grants when a new badge
 is added. None of (a–c) belong in the Analysis-page polish pass. Build the
 whole vertical slice when Portfolio gets the redesign so we ship a coherent
 feature instead of half a backend.
+
+---
+
+## 13. Notifications Center & 10,000 DB Cap Pruning
+
+### 13.1 Schema & Indexing
+The `notifications` table stores events per user:
+* `id` (INTEGER PK)
+* `user_id` (INTEGER FK → `users.id`, indexed)
+* `type` (TEXT, indexed): `trade_executed`, `stop_hit`, `target_hit`, `manual_close`, `auto_squareoff`, `system_error`, `info`, `warning`
+* `title` (TEXT): Short digestible title
+* `message` (TEXT): Short digestible summary
+* `details` (TEXT, optional): Detailed stack trace or JSON payload for error inspection
+* `is_read` (BOOLEAN, indexed)
+* `created_at` (TEXT, indexed)
+
+### 13.2 10,000 Cap & 1,000-Row Pruning Algorithm
+* To maintain lightweight SQLite performance over time, `database.py::create_notification()` tracks notification counts per `user_id`.
+* When a user reaches **10,000 notifications**, the backend executes a subquery deletion pruning the oldest **1,000 notifications** for that user in a single operation:
+```sql
+DELETE FROM notifications WHERE id IN (
+  SELECT id FROM notifications WHERE user_id = :user_id ORDER BY id ASC LIMIT 1000
+);
+```
+
+### 13.3 API Cursor Pagination
+* Endpoints: `GET /api/notifications` supports `limit` (default 20), `before_id` (cursor), `unread_only`, and `type_category`.
+* Cursor-based pagination (`id < before_id`) guarantees smooth infinite scrolling in the frontend without duplicate items or pagination offset shifts.
+
+### 13.4 Frontend Instagram-Style Overlay & Error Modal
+* **`NotificationBell.jsx`**: Floating unread badge counter in header navbar.
+* **`NotificationDrawer.jsx`**: Popover feed drawer with category tabs ("All", "Unread", "Trades", "Errors") and relative timestamps ("2m ago"). Employs an `IntersectionObserver` sentinel for continuous infinite scroll.
+* **`ErrorDetailsModal.jsx`**: Opened when clicking "View Error Details" on error cards. Displays title, timestamp, message digest, and a copyable code block containing full stack traces / server error payloads.
+

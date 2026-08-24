@@ -5,7 +5,7 @@ from datetime import datetime
 
 import pytz
 
-from data.nse_session import NSE_HEADERS, get_nse_session, invalidate_nse_session
+from data.nse_session import get_nse_headers, get_nse_session, invalidate_nse_session
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def _fetch_index_chart_payload() -> dict:
         try:
             response = session.get(
                 _INDEX_CHART_URL,
-                headers={**NSE_HEADERS, "Referer": _INDEX_REFERER},
+                headers={**get_nse_headers(), "Referer": _INDEX_REFERER},
                 timeout=15,
             )
             if response.status_code in (401, 403) and attempt == 1:

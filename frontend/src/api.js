@@ -225,4 +225,36 @@ export async function testLLM() {
   return data;
 }
 
+// ── Notifications ──
+
+export async function getNotifications({ limit = 20, before_id = null, unread_only = false, type_category = null } = {}) {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (before_id) params.append("before_id", String(before_id));
+  if (unread_only) params.append("unread_only", "true");
+  if (type_category) params.append("type_category", type_category);
+  const { data } = await api.get(`/notifications?${params.toString()}`);
+  return data;
+}
+
+export async function getNotification(id) {
+  const { data } = await api.get(`/notifications/${id}`);
+  return data;
+}
+
+export async function createNotification({ type, title, message, details = null }) {
+  const { data } = await api.post("/notifications", { type, title, message, details });
+  return data;
+}
+
+export async function markNotificationsRead({ ids = null, mark_all = false }) {
+  const { data } = await api.post("/notifications/mark-read", { ids, mark_all });
+  return data;
+}
+
+export async function clearReadNotifications() {
+  const { data } = await api.delete("/notifications/clear");
+  return data;
+}
+
 export default api;
+
