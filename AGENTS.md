@@ -9,6 +9,15 @@ Stack: FastAPI (Python) backend, React + Vite frontend, SQLite, Groq API for LLM
 
 ## Non-Negotiable Rules
 
+### Branching Strategy & Git Protocol (NON-NEGOTIABLE)
+- **NO DIRECT PUSH TO `main`**: Never commit or push directly to `main`. `main` represents the stable production-ready state.
+- **Always Create a Topic Branch**: Before making any code, fix, or dependency changes, verify the current git branch. If on `main`, create and checkout an appropriately named topic branch:
+  - `feature/<name>` for new features (e.g., `feature/notifications`)
+  - `fix/<name>` for bug fixes (e.g., `fix/setup-guard-race-condition`)
+  - `chore/<name>` for dependencies, refactoring, or tooling (e.g., `chore/pyright-config`)
+  - `docs/<name>` for documentation updates
+- **Pull Request / Review Workflow**: Always commit to the topic branch, push to `origin/<branch-name>`, and present the changes for user review / PR merge into `main`. Do NOT merge into `main` without explicit user instruction.
+
 ### Before Making Any Change
 - **MANDATORY**: Read `product_plan.md` and `TECHNICAL_DETAILS.md` first to understand the architecture, goals, and technical implementation.
 - **MANDATORY**: If you make any architectural, endpoint, or logic changes, you MUST update `TECHNICAL_DETAILS.md` and `product_plan.md` to keep documentation accurate.
