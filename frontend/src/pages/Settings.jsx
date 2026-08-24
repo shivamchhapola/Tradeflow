@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Settings as SettingsIcon,
@@ -12,9 +13,12 @@ import {
   ExternalLink,
   Info,
   ChevronDown,
+  AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import {
   getSettings,
+  getSettingsStatus,
   updateSettings,
   getLLMStatus,
   testLLM,
@@ -39,7 +43,12 @@ const LLM_PROVIDERS = [
 ];
 
 export default function Settings() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const isOnboarding = searchParams.get("onboarding") === "true";
+
   const [settings, setSettings] = useState(null);
+  const [configStatus, setConfigStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [llmStatus, setLlmStatus] = useState(null);
@@ -54,8 +63,9 @@ export default function Settings() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const data = await getSettings();
+      const [data, status] = await Promise.all([getSettings(), getSettingsStatus()]);
       setSettings(data);
+      setConfigStatus(status);
       setFormLLM(data.llm || {});
       setFormDataSources(data.data_sources || {});
       setDirty(false);
@@ -82,23 +92,39 @@ export default function Settings() {
     setDirty(true);
   };
 
+  const handleFillRecommended = () => {
+    handleDataSourceChange("nse_base_url", "https://www.nseindia.com");
+    toast.success("Filled recommended URL. Click 'Save changes' to complete setup.");
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
       const updated = await updateSettings({ llm: formLLM, data_sources: formDataSources });
+      const status = await getSettingsStatus();
       setSettings(updated);
+      setConfigStatus(status);
       setFormLLM(updated.llm || {});
       setFormDataSources(updated.data_sources || {});
       setDirty(false);
       setLlmStatus(null);
       setTestResult(null);
-      toast.success("Settings saved.");
+
+      if (status.is_configured) {
+        toast.success("Setup complete! All features unlocked.");
+        if (isOnboarding) {
+          navigate("/", { replace: true });
+        }
+      } else {
+        toast.success("Settings saved.");
+      }
     } catch (err) {
       toast.error(formatApiError(err, "Couldn't save settings."));
     } finally {
       setSaving(false);
     }
   };
+
 
   const handleStatusCheck = async () => {
     setStatusLoading(true);
@@ -168,6 +194,60 @@ export default function Settings() {
           </button>
         )}
       </header>
+
+      {/* ── Onboarding / Setup Required Banner ── */}
+      {configStatus && !configStatus.is_configured && (
+        <div
+          style={{
+            background: "rgba(245, 158, 11, 0.1)",
+            border: "1px solid rgba(245, 158, 11, 0.3)",
+            borderRadius: "var(--radius-md, 12px)",
+            padding: "16px 20px",
+            marginBottom: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 260 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                background: "rgba(245, 158, 11, 0.2)",
+                color: "var(--amber, #f59e0b)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text-primary, #fff)" }}>
+                Initial Setup Required
+              </h3>
+              <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-secondary, #aaa)", lineHeight: 1.4 }}>
+                Please set up your <strong>NSE Base URL</strong> under Data Sources below to unlock the platform.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleFillRecommended}
+            style={{ fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            <Sparkles size={13} color="var(--amber, #f59e0b)" />
+            Fill Recommended URL
+          </button>
+        </div>
+      )}
+
 
       {/* ── LLM Provider ── */}
       <section className="settings-section">

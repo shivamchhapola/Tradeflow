@@ -15,7 +15,7 @@ from typing import Optional
 
 from auth.dependencies import get_current_user
 from models import User
-from settings import get_settings, update_settings, mask_secrets
+from settings import get_settings, update_settings, mask_secrets, check_settings_configured
 from llm.provider import get_llm_provider
 
 logger = logging.getLogger("tradeflow.routes.settings")
@@ -28,6 +28,15 @@ router = APIRouter(prefix="/api/settings", tags=["Settings"])
 def read_settings(current_user: User = Depends(get_current_user)):
     """Return current settings with API keys masked."""
     return mask_secrets(get_settings())
+
+
+# ── GET /api/settings/status ──
+
+@router.get("/status")
+def settings_configuration_status(current_user: User = Depends(get_current_user)):
+    """Return whether required settings are configured."""
+    return check_settings_configured()
+
 
 
 # ── PUT /api/settings ──

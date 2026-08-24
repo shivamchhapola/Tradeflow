@@ -135,6 +135,27 @@ def mask_secrets(settings: dict) -> dict:
     return masked
 
 
+def check_settings_configured() -> dict:
+    """
+    Checks if initial setup has been completed.
+    Required setup items:
+      - data_sources.nse_base_url (must be non-empty valid URL)
+    Returns {"is_configured": bool, "missing_fields": list[str]}
+    """
+    settings = get_settings()
+    missing = []
+    ds = settings.get("data_sources", {})
+    nse_url = (ds.get("nse_base_url") or "").strip()
+    if not nse_url or not (nse_url.startswith("http://") or nse_url.startswith("https://")):
+        missing.append("nse_base_url")
+
+    return {
+        "is_configured": len(missing) == 0,
+        "missing_fields": missing,
+    }
+
+
+
 def _write_atomic(data: dict) -> None:
     """Write settings to a temp file, then atomically replace."""
     with _write_lock:

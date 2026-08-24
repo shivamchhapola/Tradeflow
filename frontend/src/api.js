@@ -208,10 +208,16 @@ export async function getSettings() {
   return data;
 }
 
+export async function getSettingsStatus() {
+  const { data } = await api.get("/settings/status");
+  return data;
+}
+
 export async function updateSettings(patch) {
   const { data } = await api.put("/settings", patch);
   return data;
 }
+
 
 export async function getLLMStatus() {
   const { data } = await api.get("/settings/llm/status");
