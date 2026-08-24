@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlmodel import Session, select, col, func, delete
 
 from database import get_db, create_notification
-from models import Notification
+from models import Notification, User
 from auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
@@ -25,10 +25,10 @@ def list_notifications(
     before_id: Optional[int] = Query(None),
     unread_only: bool = Query(False),
     type_category: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ):
-    user_id = current_user["id"]
+    user_id = current_user.id
     
     # Query items
     stmt = select(Notification).where(Notification.user_id == user_id)
@@ -66,10 +66,10 @@ def list_notifications(
 @router.get("/{notification_id}")
 def get_notification(
     notification_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ):
-    user_id = current_user["id"]
+    user_id = current_user.id
     item = session.exec(
         select(Notification)
         .where(Notification.id == notification_id)
@@ -82,10 +82,10 @@ def get_notification(
 @router.post("")
 def post_notification(
     body: CreateNotificationReq,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ):
-    user_id = current_user["id"]
+    user_id = current_user.id
     item = create_notification(
         session=session,
         user_id=user_id,
@@ -99,10 +99,10 @@ def post_notification(
 @router.post("/mark-read")
 def mark_read(
     body: MarkReadReq,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ):
-    user_id = current_user["id"]
+    user_id = current_user.id
     stmt = select(Notification).where(Notification.user_id == user_id)
     
     if not body.mark_all and body.ids:
@@ -123,10 +123,10 @@ def mark_read(
 
 @router.delete("/clear")
 def clear_read_notifications(
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_db),
 ):
-    user_id = current_user["id"]
+    user_id = current_user.id
     stmt = delete(Notification).where(
         Notification.user_id == user_id,
         Notification.is_read == True,
