@@ -30,6 +30,14 @@ def read_settings(current_user: User = Depends(get_current_user)):
     return mask_secrets(get_settings())
 
 
+@router.get("/status")
+def settings_status(current_user: User = Depends(get_current_user)):
+    """Check if initial configuration has been completed."""
+    settings = get_settings()
+    is_configured = bool(settings)
+    return {"is_configured": is_configured, "settings": mask_secrets(settings)}
+
+
 # ── PUT /api/settings ──
 
 class SettingsUpdate(BaseModel):
