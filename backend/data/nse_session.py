@@ -25,7 +25,8 @@ log = logging.getLogger(__name__)
 from settings import get_settings
 
 def get_nse_base_url() -> str:
-    return get_settings().get("data_sources", {}).get("nse_base_url", "")
+    url = get_settings().get("data_sources", {}).get("nse_base_url", "")
+    return url.rstrip("/")
 
 def get_nse_headers() -> dict:
     base_url = get_nse_base_url()

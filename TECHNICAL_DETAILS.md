@@ -48,8 +48,9 @@ GIFT Nifty reflects overnight market sentiment as it trades nearly 24 hours. The
 
 #### 2.4 NIFTY 50 Candlestick & Context Chart (Trade Page)
 *   **Source:** NSE `indexTrackerApi?functionName=getIndexChart&index=NIFTY%2050&flag=1D` — same endpoint as the NSE website index chart. Backend buckets `grapthData` into **~1m OHLC** candles (`data/nifty_chart.py`).
+*   **Base URL & Dynamic URL Construction:** `get_nse_base_url()` in `data/nse_session.py` normalizes configured URLs by stripping trailing slashes (`.rstrip("/")`). `data/nifty_chart.py` dynamically constructs `chart_url` and `referer` from `get_nse_base_url()`, eliminating hardcoded hostnames and enforcing configuration validation.
 *   **Default display:** lightweight-charts with configurable visible range (1H / 2H / 4H / day) and optional SMA 9/21 overlays.
-*   **API Response:** The `/api/nifty-chart` endpoint has been upgraded to return both the legacy `points` array (for line-chart backward compatibility) and a new `candles` array containing structured OHLC candles (`{time, open, high, low, close}`).
+*   **API Response:** The `/api/nifty-chart` endpoint returns both the legacy `points` array (for line-chart backward compatibility) and a new `candles` array containing structured OHLC candles (`{time, open, high, low, close}`).
 *   **Chart Decoupling & Navigation:**
     *   Clicking anywhere on a call or put **leg** (OI, IV, LTP columns for that side) charts that option's premium candlestick chart. LTP is plain text with % change below; chart selection is a subtle leg highlight, not a colored LTP button.
     *   When charting an option premium, a sleek "Back to NIFTY 50 Index" button appears in the chart header, allowing the user to easily toggle back to the main index.
@@ -147,6 +148,7 @@ Uses `BackgroundScheduler` from `apscheduler`:
 *   `GET /api/stats`: Computes win rate, average win/loss, and max drawdown on the fly.
 *   `GET /api/settings`: Returns current runtime settings (API keys masked). Requires auth.
 *   `PUT /api/settings`: Partial deep-merge update to `settings.json`. Requires auth.
+*   `GET /api/settings/status`: Onboarding status check — returns `{ is_configured: bool, missing: list[str] }`. Requires auth.
 *   `GET /api/settings/llm/status`: Health-check the configured LLM provider (pings Ollama or validates Groq key).
 *   `POST /api/settings/llm/test`: Sends a brief test prompt to verify LLM end-to-end.
 *   `GET /api/quests/today`: Returns the active quest for the current `(date, phase)`. The resolver auto-expires any in-progress quest whose phase no longer matches the natural phase (e.g. weekend quest still open when intraday begins). Response includes `phase` (the *display* phase, may be a `pending_reports` / `quiz_backlog` nudge), `natural_phase` (the actual underlying phase, used for the countdown timer), `quest` (DB row + `quiz_results` parsed), `questions` (server-side stripped — `correct` and `explanation` removed), and `current_index` (next unanswered question).
@@ -208,6 +210,7 @@ Tradeflow separates **bootstrap secrets** (`.env`, loaded once at startup) from 
 
 *   `GET /api/settings` — returns settings with API keys masked (last 4 chars only).
 *   `PUT /api/settings` — partial update (deep merge). Send only the keys you want to change.
+*   `GET /api/settings/status` — checks configuration readiness (returns `{ is_configured: bool, missing: list[str] }`).
 *   `GET /api/settings/llm/status` — pings Ollama or validates Groq key.
 *   `POST /api/settings/llm/test` — sends a test prompt, returns response preview + latency.
 
@@ -250,6 +253,7 @@ Public/optional:
 *   **`src/api.js`** — axios request interceptor attaches `Authorization: Bearer <token>`. Response interceptor: on `401` (excluding the auth endpoints themselves) it clears the token and dispatches `tradeflow:auth-expired` so `AuthContext` can transition to a logged-out state from anywhere.
 *   **`src/context/AuthContext.jsx`** — top-level provider mounted in `main.jsx`. Bootstraps `user` + `stats` from `/api/auth/me` on first render and exposes `login`, `signup`, `logout`, `refreshStats`. Also invalidates the shared `useStats` cache on every login/logout/expiry transition to prevent showing the previous user's XP.
 *   **`src/components/AuthWrapper.jsx`** — gate. `/login` and `/signup` are public.
+*   **`src/components/SetupGuard.jsx`** — onboarding gate. Calls `GET /api/settings/status` on mount and route transitions. Blocks rendering of child routes (`<AppContent />`) while status is checking (`!checked`) or when `!isConfigured` (on non-allowed routes), safely redirecting unconfigured users to `/settings?onboarding=true`. On error, sets `isConfigured(false)` to block unconfigured access.
 
 ---
 

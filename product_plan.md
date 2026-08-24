@@ -295,6 +295,14 @@ Multiple rows may share the same `date`: each `/api/analysis/run` appends a snap
 | `POST` | `/api/quests/today/answer` | `{ question_id, answer }` → validates, scores, awards XP on the last answer |
 | `GET` | `/api/quests/recent?limit=5` | Last N settled quests for the success-rate dot strip |
 
+### Settings
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/settings` | Get current runtime configuration (API keys masked) |
+| `PUT` | `/api/settings` | Deep-merge update to `settings.json` |
+| `GET` | `/api/settings/status` | Configuration status: `{ is_configured: bool, missing: list[str] }` |
+| `GET` | `/api/settings/llm/status` | Health check active LLM provider |
+| `POST` | `/api/settings/llm/test` | Test prompt to verify LLM connection |
 
 ### Auth (app-level)
 | Method | Endpoint | Description |
