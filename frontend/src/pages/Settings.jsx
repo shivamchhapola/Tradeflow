@@ -47,8 +47,10 @@ const LLM_PROVIDERS = [
 
 export default function Settings() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const isOnboarding = searchParams.get("onboarding") === "true";
+  const navigate = useNavigate();
+
+  const { setIsDirty, registerSaveHandler, registerDiscardHandler } = useUnsavedChanges();
 
   const [settings, setSettings] = useState(null);
   const [configStatus, setConfigStatus] = useState(null);
@@ -63,6 +65,10 @@ export default function Settings() {
   const [formLLM, setFormLLM] = useState({});
   const [formDataSources, setFormDataSources] = useState({});
   const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    setIsDirty(dirty);
+  }, [dirty, setIsDirty]);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -82,17 +88,6 @@ export default function Settings() {
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
-
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (dirty) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [dirty]);
 
   const handleLLMChange = (key, value) => {
     setFormLLM((prev) => ({ ...prev, [key]: value }));
@@ -116,7 +111,7 @@ export default function Settings() {
     toast.success("Filled default data source URLs. Click 'Save changes' to complete setup.");
   };
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (settings) {
       setFormLLM(settings.llm || {});
       setFormDataSources(settings.data_sources || {});
@@ -125,9 +120,14 @@ export default function Settings() {
       setTestResult(null);
       toast.info("Unsaved changes discarded.");
     }
-  };
+  }, [settings]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
+    if (!formDataSources.nse_base_url?.trim()) {
+      toast.error("NSE Base URL is required to complete initial setup.");
+      return false;
+    }
+
     setSaving(true);
     try {
       const updated = await updateSettings({ llm: formLLM, data_sources: formDataSources });
@@ -148,13 +148,19 @@ export default function Settings() {
       } else {
         toast.success("Settings saved.");
       }
+      return true;
     } catch (err) {
       toast.error(formatApiError(err, "Couldn't save settings."));
+      return false;
     } finally {
       setSaving(false);
     }
-  };
+  }, [formDataSources, formLLM, isOnboarding, navigate]);
 
+  useEffect(() => {
+    registerSaveHandler(handleSave);
+    registerDiscardHandler(handleCancel);
+  }, [registerSaveHandler, registerDiscardHandler, handleSave, handleCancel]);
 
   const handleStatusCheck = async () => {
     setStatusLoading(true);

@@ -10,17 +10,26 @@ import { useAuth } from "../../context/AuthContext";
 import { NAV } from "../../lib/copy";
 import NotificationBell from "../notifications/NotificationBell";
 
+import { useUnsavedChanges } from "../../context/UnsavedChangesContext";
+
 const LEVEL_XP = 500;
 
 export default function Nav() {
   const location = useLocation();
   const { user } = useAuth();
+  const { confirmNavigation } = useUnsavedChanges();
   const noChrome = location.pathname === "/login" || location.pathname === "/signup";
+
+  const handleNavClick = (to, e) => {
+    if (!confirmNavigation(to)) {
+      e.preventDefault();
+    }
+  };
 
   return (
     <nav className="nav" aria-label="Primary">
       <div className="nav-left">
-        <Link to="/" className="nav-brand">
+        <Link to="/" className="nav-brand" onClick={(e) => handleNavClick("/", e)}>
           <img
             src="/tradeflow.svg"
             alt=""
@@ -33,11 +42,11 @@ export default function Nav() {
         </Link>
         {!noChrome && user && (
           <div className="nav-links">
-            <NavLink to="/" end>{NAV.links.analysis}</NavLink>
-            <NavLink to="/trade">{NAV.links.trade}</NavLink>
-            <NavLink to="/portfolio">{NAV.links.portfolio}</NavLink>
-            <NavLink to="/reports">{NAV.links.reports}</NavLink>
-            <NavLink to="/learn">{NAV.links.learn}</NavLink>
+            <NavLink to="/" end onClick={(e) => handleNavClick("/", e)}>{NAV.links.analysis}</NavLink>
+            <NavLink to="/trade" onClick={(e) => handleNavClick("/trade", e)}>{NAV.links.trade}</NavLink>
+            <NavLink to="/portfolio" onClick={(e) => handleNavClick("/portfolio", e)}>{NAV.links.portfolio}</NavLink>
+            <NavLink to="/reports" onClick={(e) => handleNavClick("/reports", e)}>{NAV.links.reports}</NavLink>
+            <NavLink to="/learn" onClick={(e) => handleNavClick("/learn", e)}>{NAV.links.learn}</NavLink>
           </div>
         )}
       </div>
@@ -278,10 +287,21 @@ function UserMenu() {
   if (!user) return null;
   const label = user.display_name || user.email;
 
+  const { confirmNavigation } = useUnsavedChanges();
+
+  const handleSettingsClick = () => {
+    if (confirmNavigation("/settings")) {
+      navigate("/settings");
+      setOpen(false);
+    }
+  };
+
   const handleLogout = () => {
-    logout();
-    setOpen(false);
-    navigate("/login", { replace: true });
+    if (confirmNavigation("/login")) {
+      logout();
+      setOpen(false);
+      navigate("/login", { replace: true });
+    }
   };
 
   return (
@@ -323,7 +343,7 @@ function UserMenu() {
           </div>
           <button
             type="button"
-            onClick={() => { navigate("/settings"); setOpen(false); }}
+            onClick={handleSettingsClick}
             className="btn btn-ghost btn-sm nav-user-menu__item"
             style={{
               justifyContent: "flex-start",
