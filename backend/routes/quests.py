@@ -136,13 +136,6 @@ def get_todays_quest(
         .where(PaperTrade.report == None)
     ).all())
 
-    unanswered_quizzes = len(session.exec(
-        select(DailyQuest)
-        .where(DailyQuest.user_id == user_id)
-        .where(DailyQuest.status == "pending")
-        .where(DailyQuest.date < today)
-    ).all())
-
     quest, questions = _resolve_active_quest(session, today, natural_phase, user_id)
     quest_payload = _serialise_quest(quest, questions)
 
@@ -150,8 +143,6 @@ def get_todays_quest(
     display_phase = natural_phase
     if not is_weekend and pending_reports > 0 and natural_phase in ("early", "postmarket", "premarket"):
         display_phase = "pending_reports"
-    elif not is_weekend and unanswered_quizzes > 0 and natural_phase in ("early", "postmarket"):
-        display_phase = "quiz_backlog"
 
     answered_ids = {r["id"] for r in quest_payload.get("quiz_results", [])}
     current_index = next(
@@ -163,7 +154,6 @@ def get_todays_quest(
         "phase":              display_phase,
         "natural_phase":      natural_phase,
         "pending_reports":    pending_reports,
-        "unanswered_quizzes": unanswered_quizzes,
         "quest":              quest_payload,
         "questions":          public_views(questions),
         "current_index":      current_index,
@@ -331,3 +321,27 @@ def quest_history(
         }
         for q in quests
     ]
+
+
+@router.post("/dismiss-backlog")
+def dismiss_backlog(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_db)
+):
+    """Mark all pending past quests as expired so the backlog is cleared."""
+    today = _today_ist()
+    assert current_user.id is not None
+    pending_past = session.exec(
+        select(DailyQuest)
+        .where(DailyQuest.user_id == current_user.id)
+        .where(DailyQuest.status == "pending")
+        .where(DailyQuest.date < today)
+    ).all()
+
+    for q in pending_past:
+        q.status = "expired"
+        q.expired_at = now_ist().isoformat()
+        session.add(q)
+
+    session.commit()
+    return {"status": "success", "dismissed_count": len(pending_past)}

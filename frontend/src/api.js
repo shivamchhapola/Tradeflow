@@ -201,6 +201,11 @@ export async function getRecentQuests(limit = 5) {
   return data;
 }
 
+export async function dismissQuestBacklog() {
+  const { data } = await api.post("/quests/dismiss-backlog");
+  return data;
+}
+
 // ── Settings ──
 
 export async function getSettings() {
