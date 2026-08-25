@@ -54,6 +54,7 @@ def get_llm_provider() -> LLMProvider:
         return GroqProvider(
             api_key=llm.get("groq_api_key", ""),
             model=llm.get("groq_model", "llama-3.1-8b-instant"),
+            base_url=llm.get("groq_base_url", "https://api.groq.com/openai/v1"),
         )
 
     # Default: Ollama

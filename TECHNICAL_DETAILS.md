@@ -193,6 +193,7 @@ Tradeflow separates **bootstrap secrets** (`.env`, loaded once at startup) from 
     "ollama_base_url": "http://localhost:11434",
     "ollama_model": "qwen3.5:4b",
     "groq_api_key": "",
+    "groq_base_url": "https://api.groq.com/openai/v1",
     "groq_model": "llama-3.1-8b-instant"
   },
   "data_sources": {

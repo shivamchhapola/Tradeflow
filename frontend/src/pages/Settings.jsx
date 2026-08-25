@@ -92,9 +92,14 @@ export default function Settings() {
     setDirty(true);
   };
 
-  const handleFillRecommended = () => {
-    handleDataSourceChange("nse_base_url", "https://www.nseindia.com");
-    toast.success("Filled recommended URL. Click 'Save changes' to complete setup.");
+  const handleFillDefault = () => {
+    setFormDataSources((prev) => ({
+      ...prev,
+      nse_base_url: "https://www.nseindia.com",
+      yfinance_base_url: "https://query1.finance.yahoo.com",
+    }));
+    setDirty(true);
+    toast.success("Filled default data source URLs. Click 'Save changes' to complete setup.");
   };
 
   const handleSave = async () => {
@@ -239,11 +244,11 @@ export default function Settings() {
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={handleFillRecommended}
+            onClick={handleFillDefault}
             style={{ fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}
           >
             <Sparkles size={13} color="var(--amber, #f59e0b)" />
-            Fill Recommended URL
+            Fill Default URL
           </button>
         </div>
       )}
@@ -321,6 +326,13 @@ export default function Settings() {
                   </>
                 }
                 type="password"
+              />
+              <SettingsField
+                label="Groq Base URL"
+                value={formLLM.groq_base_url || ""}
+                onChange={(v) => handleLLMChange("groq_base_url", v)}
+                placeholder="https://api.groq.com/openai/v1"
+                hint="Base URL for Groq API endpoint or compatible proxy."
               />
               <SettingsField
                 label="Model"
@@ -424,16 +436,16 @@ export default function Settings() {
             label="NSE Base URL"
             value={formDataSources.nse_base_url || ""}
             onChange={(v) => handleDataSourceChange("nse_base_url", v)}
-            placeholder="https://..."
-            hint="The base URL used to construct option chain and market status requests. Refer to DATA_SOURCES.md for valid links."
+            placeholder="https://www.nseindia.com"
+            hint="Base URL for GIFT Nifty, option chain, and index chart requests. Refer to DATA_SOURCES.md for valid links."
           />
-          <div className="settings-field">
-            <label className="settings-field-label">Global Indices</label>
-            <div className="settings-field-value-static">
-              <span className="settings-badge">yfinance</span>
-              <span className="settings-field-hint">NASDAQ, S&P 500, Nikkei, VIX, DXY, Crude, US 10Y</span>
-            </div>
-          </div>
+          <SettingsField
+            label="Global Indices Base URL (Yahoo Finance / Proxy)"
+            value={formDataSources.yfinance_base_url || ""}
+            onChange={(v) => handleDataSourceChange("yfinance_base_url", v)}
+            placeholder="https://query1.finance.yahoo.com"
+            hint="Base endpoint or proxy URL for global indices data (NASDAQ, S&P 500, Nikkei, VIX, DXY, Crude, US 10Y)."
+          />
         </div>
       </section>
 

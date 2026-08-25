@@ -43,12 +43,15 @@ DEFAULTS = {
         "ollama_base_url": "http://localhost:11434",
         "ollama_model": "qwen3.5:4b",
         "groq_api_key": "",
+        "groq_base_url": "https://api.groq.com/openai/v1",
         "groq_model": "llama-3.1-8b-instant",
     },
     "data_sources": {
         "option_chain": "nse",
         "gift_nifty": "nse",
         "nse_base_url": "",
+        "global_indices": "yfinance",
+        "yfinance_base_url": "https://query1.finance.yahoo.com",
     },
     "general": {
         "auto_squareoff_time": "15:15",
@@ -160,6 +163,7 @@ def _write_atomic(data: dict) -> None:
     """Write settings to a temp file, then atomically replace."""
     with _write_lock:
         parent = Path(SETTINGS_FILE).parent
+        tmp_path = None
         try:
             fd, tmp_path = tempfile.mkstemp(
                 dir=str(parent), suffix=".tmp", prefix="settings_"
@@ -171,8 +175,9 @@ def _write_atomic(data: dict) -> None:
         except OSError as e:
             logger.error("Failed to write settings.json: %s", e)
             # Clean up temp file if replace failed
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
             raise
