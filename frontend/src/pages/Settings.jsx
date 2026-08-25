@@ -343,6 +343,36 @@ export default function Settings() {
               />
             </>
           )}
+          <div className="settings-field">
+            <label className="settings-field-label">Mentor Coaching Persona</label>
+            <select
+              className="settings-field-input"
+              value={formLLM.mentor_persona || "supportive"}
+              onChange={(e) => handleLLMChange("mentor_persona", e.target.value)}
+              style={{ background: "var(--bg-input, #121214)", color: "var(--text-primary, #fff)" }}
+            >
+              <option value="supportive">Supportive Coach — Encouraging tone & constructive guidance</option>
+              <option value="strict">Strict Risk Manager — Direct & uncompromising on discipline</option>
+              <option value="educator">Textbook Educator — Deep dive into Greeks, IV & options structure</option>
+            </select>
+            <p className="settings-field-hint">Defines the coaching personality used in LLM trade reports.</p>
+          </div>
+          <SettingsField
+            label="Temperature (Creativity)"
+            value={formLLM.temperature ?? 0.7}
+            onChange={(v) => handleLLMChange("temperature", v)}
+            type="number"
+            placeholder="0.7"
+            hint="Randomness level between 0.0 (deterministic) and 1.0 (creative)."
+          />
+          <SettingsField
+            label="Max Tokens"
+            value={formLLM.max_tokens ?? 600}
+            onChange={(v) => handleLLMChange("max_tokens", v)}
+            type="number"
+            placeholder="600"
+            hint="Maximum response token limit for report generation (200–2000)."
+          />
         </div>
 
         {/* Actions row */}
@@ -445,6 +475,30 @@ export default function Settings() {
             onChange={(v) => handleDataSourceChange("yfinance_base_url", v)}
             placeholder="https://query1.finance.yahoo.com"
             hint="Base endpoint or proxy URL for global indices data (NASDAQ, S&P 500, Nikkei, VIX, DXY, Crude, US 10Y)."
+          />
+          <SettingsField
+            label="Option Chain Polling Interval (Seconds)"
+            value={formDataSources.option_chain_interval ?? 60}
+            onChange={(v) => handleDataSourceChange("option_chain_interval", v)}
+            type="number"
+            placeholder="60"
+            hint="Frequency in seconds to poll live option chain data during market hours (15–300s)."
+          />
+          <SettingsField
+            label="Intraday Chart Polling Interval (Seconds)"
+            value={formDataSources.chart_interval ?? 60}
+            onChange={(v) => handleDataSourceChange("chart_interval", v)}
+            type="number"
+            placeholder="60"
+            hint="Frequency in seconds to poll intraday candlestick chart data (15–300s)."
+          />
+          <SettingsField
+            label="Network Request Timeout (Seconds)"
+            value={formDataSources.request_timeout ?? 10}
+            onChange={(v) => handleDataSourceChange("request_timeout", v)}
+            type="number"
+            placeholder="10"
+            hint="HTTP request timeout limit for market data queries (3–60s)."
           />
         </div>
       </section>

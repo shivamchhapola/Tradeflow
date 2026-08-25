@@ -48,6 +48,9 @@ def get_llm_provider() -> LLMProvider:
     settings = get_settings()
     llm = settings.get("llm", {})
     provider = llm.get("provider", "ollama")
+    temperature = float(llm.get("temperature", 0.7))
+    max_tokens = int(llm.get("max_tokens", 600))
+    persona = str(llm.get("mentor_persona", "supportive"))
 
     if provider == "groq":
         from llm.groq import GroqProvider
@@ -55,6 +58,9 @@ def get_llm_provider() -> LLMProvider:
             api_key=llm.get("groq_api_key", ""),
             model=llm.get("groq_model", "llama-3.1-8b-instant"),
             base_url=llm.get("groq_base_url", "https://api.groq.com/openai/v1"),
+            temperature=temperature,
+            max_tokens=max_tokens,
+            persona=persona,
         )
 
     # Default: Ollama
@@ -62,4 +68,7 @@ def get_llm_provider() -> LLMProvider:
     return OllamaProvider(
         base_url=llm.get("ollama_base_url", "http://localhost:11434"),
         model=llm.get("ollama_model", "qwen3.5:4b"),
+        temperature=temperature,
+        max_tokens=max_tokens,
+        persona=persona,
     )

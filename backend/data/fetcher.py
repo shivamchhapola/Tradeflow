@@ -23,6 +23,7 @@ from data.nse_session import (
     get_nse_session,
     invalidate_nse_session,
     get_nse_base_url,
+    get_nse_timeout,
 )
 
 log = logging.getLogger(__name__)
@@ -56,7 +57,7 @@ def _fetch_gift_nifty_change_pct() -> Optional[float]:
         try:
             session = get_nse_session()
             resp = session.get(
-                url, headers=get_nse_headers(), timeout=10
+                url, headers=get_nse_headers(), timeout=get_nse_timeout()
             )
             if resp.status_code in (401, 403) and attempt == 1:
                 # Cookie expired — drop the cached session and retry once.
@@ -100,7 +101,7 @@ def _fetch_yfinance_change_pct(symbol: str) -> Optional[float]:
                 "Chrome/124.0.0.0 Safari/537.36"
             )
         }
-        resp = requests.get(url, headers=headers, timeout=10)
+        resp = requests.get(url, headers=headers, timeout=get_nse_timeout())
         if resp.status_code == 200:
             data = resp.json()
             result = data.get("chart", {}).get("result", [])

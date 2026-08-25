@@ -19,10 +19,16 @@ class GroqProvider(LLMProvider):
         api_key: str = "",
         model: str = "llama-3.1-8b-instant",
         base_url: str = "",
+        temperature: float = 0.7,
+        max_tokens: int = 600,
+        persona: str = "supportive",
     ):
         self._api_key = api_key
         self._model = model
         self._base_url = base_url.strip()
+        self._temperature = temperature
+        self._max_tokens = max_tokens
+        self._persona = persona
 
     @property
     def provider_name(self) -> str:
@@ -55,8 +61,8 @@ class GroqProvider(LLMProvider):
             response = client.chat.completions.create(
                 model=self._model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=600,
+                temperature=self._temperature,
+                max_tokens=self._max_tokens,
             )
             text = response.choices[0].message.content
             if not text:

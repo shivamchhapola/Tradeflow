@@ -194,11 +194,20 @@ Tradeflow separates **bootstrap secrets** (`.env`, loaded once at startup) from 
     "ollama_model": "qwen3.5:4b",
     "groq_api_key": "",
     "groq_base_url": "https://api.groq.com/openai/v1",
-    "groq_model": "llama-3.1-8b-instant"
+    "groq_model": "llama-3.1-8b-instant",
+    "mentor_persona": "supportive", // "supportive" | "strict" | "educator"
+    "temperature": 0.7,
+    "max_tokens": 600
   },
   "data_sources": {
     "option_chain": "nse",
-    "gift_nifty": "nse"
+    "gift_nifty": "nse",
+    "nse_base_url": "https://www.nseindia.com",
+    "global_indices": "yfinance",
+    "yfinance_base_url": "https://query1.finance.yahoo.com",
+    "option_chain_interval": 60,
+    "chart_interval": 60,
+    "request_timeout": 10
   },
   "general": {
     "auto_squareoff_time": "15:15",

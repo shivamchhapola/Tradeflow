@@ -45,6 +45,9 @@ DEFAULTS = {
         "groq_api_key": "",
         "groq_base_url": "https://api.groq.com/openai/v1",
         "groq_model": "llama-3.1-8b-instant",
+        "mentor_persona": "supportive",
+        "temperature": 0.7,
+        "max_tokens": 600,
     },
     "data_sources": {
         "option_chain": "nse",
@@ -52,6 +55,9 @@ DEFAULTS = {
         "nse_base_url": "",
         "global_indices": "yfinance",
         "yfinance_base_url": "https://query1.finance.yahoo.com",
+        "option_chain_interval": 60,
+        "chart_interval": 60,
+        "request_timeout": 10,
     },
     "general": {
         "auto_squareoff_time": "15:15",
@@ -60,6 +66,7 @@ DEFAULTS = {
 }
 
 VALID_LLM_PROVIDERS = {"ollama", "groq"}
+VALID_MENTOR_PERSONAS = {"supportive", "strict", "educator"}
 VALID_OPTION_CHAIN_SOURCES = {"nse"}
 VALID_GIFT_NIFTY_SOURCES = {"nse"}
 
@@ -84,11 +91,44 @@ def _validate(settings: dict) -> dict:
         llm["provider"] = DEFAULTS["llm"]["provider"]
         logger.warning("Invalid LLM provider — reset to '%s'", llm["provider"])
 
+    if llm.get("mentor_persona") not in VALID_MENTOR_PERSONAS:
+        llm["mentor_persona"] = DEFAULTS["llm"]["mentor_persona"]
+
+    try:
+        temp = float(llm.get("temperature", 0.7))
+        llm["temperature"] = max(0.0, min(1.0, round(temp, 2)))
+    except (TypeError, ValueError):
+        llm["temperature"] = DEFAULTS["llm"]["temperature"]
+
+    try:
+        tokens = int(llm.get("max_tokens", 600))
+        llm["max_tokens"] = max(200, min(2000, tokens))
+    except (TypeError, ValueError):
+        llm["max_tokens"] = DEFAULTS["llm"]["max_tokens"]
+
     ds = settings.get("data_sources", {})
     if ds.get("option_chain") not in VALID_OPTION_CHAIN_SOURCES:
         ds["option_chain"] = DEFAULTS["data_sources"]["option_chain"]
     if ds.get("gift_nifty") not in VALID_GIFT_NIFTY_SOURCES:
         ds["gift_nifty"] = DEFAULTS["data_sources"]["gift_nifty"]
+
+    try:
+        oci = int(ds.get("option_chain_interval", 60))
+        ds["option_chain_interval"] = max(15, min(300, oci))
+    except (TypeError, ValueError):
+        ds["option_chain_interval"] = DEFAULTS["data_sources"]["option_chain_interval"]
+
+    try:
+        ci = int(ds.get("chart_interval", 60))
+        ds["chart_interval"] = max(15, min(300, ci))
+    except (TypeError, ValueError):
+        ds["chart_interval"] = DEFAULTS["data_sources"]["chart_interval"]
+
+    try:
+        to = int(ds.get("request_timeout", 10))
+        ds["request_timeout"] = max(3, min(60, to))
+    except (TypeError, ValueError):
+        ds["request_timeout"] = DEFAULTS["data_sources"]["request_timeout"]
 
     # Allow Docker / Environment override for Ollama URL
     env_ollama = os.environ.get("OLLAMA_BASE_URL")

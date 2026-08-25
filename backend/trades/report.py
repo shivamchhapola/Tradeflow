@@ -48,6 +48,16 @@ def _extract_structured_tokens(text: str) -> tuple[str, Optional[int], Optional[
 
 
 def generate_report(trade: PaperTrade, premarket: PremarketLog | None) -> tuple[str, Optional[int], Optional[str]]:
+    provider = get_llm_provider()
+    persona = getattr(provider, "_persona", "supportive")
+
+    if persona == "strict":
+        persona_intro = "You are a strict, no-nonsense risk manager and trading mentor reviewing a paper trade. Be direct and uncompromising on risk management violations, thesis discipline, and market alignment."
+    elif persona == "educator":
+        persona_intro = "You are an analytical textbook trading instructor. Focus deeply on options mechanics, Greeks (delta, theta, IV), market structure, and technical setups."
+    else:
+        persona_intro = "You are an encouraging, supportive trading mentor reviewing a paper trade made by a student learning F&O (Futures & Options) on the Indian stock market (NSE/NIFTY)."
+
     metrics = {}
     pm_score = 'N/A'
     pm_bias = 'N/A'
@@ -60,7 +70,7 @@ def generate_report(trade: PaperTrade, premarket: PremarketLog | None) -> tuple[
     has_thesis = bool(trade.thesis.strip() if trade.thesis else "")
     thesis_text = trade.thesis or "Not provided — student did not write a thesis before entering."
 
-    prompt = f"""You are a trading mentor reviewing a paper trade made by a student learning F&O (Futures & Options) on the Indian stock market (NSE/NIFTY).
+    prompt = f"""{persona_intro}
 
 PRE-MARKET CONTEXT (what was known before the trade):
 - Bias score: {pm_score}

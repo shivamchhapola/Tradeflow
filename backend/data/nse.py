@@ -24,6 +24,7 @@ from data.nse_session import (
     invalidate_nse_session,
     get_nse_base_url,
     get_nse_headers,
+    get_nse_timeout,
 )
 
 
@@ -76,7 +77,7 @@ def _get_json_with_retry(url: str, referer: str) -> dict:
     headers["Referer"] = referer
     for attempt in (1, 2):
         session = get_nse_session()
-        response = session.get(url, headers=headers, timeout=10)
+        response = session.get(url, headers=headers, timeout=get_nse_timeout())
         if response.status_code in (401, 403) and attempt == 1:
             invalidate_nse_session()
             continue
@@ -94,7 +95,7 @@ def _warm_option_chain_page(base_url: str) -> None:
     session.get(
         f"{base_url}/option-chain?type=Indices&symbol=NIFTY",
         headers=headers,
-        timeout=10,
+        timeout=get_nse_timeout(),
     )
 
 

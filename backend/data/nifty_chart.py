@@ -10,6 +10,7 @@ from data.nse_session import (
     get_nse_headers,
     get_nse_session,
     invalidate_nse_session,
+    get_nse_timeout,
 )
 
 log = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def _fetch_index_chart_payload() -> dict:
             response = session.get(
                 chart_url,
                 headers={**get_nse_headers(), "Referer": referer},
-                timeout=15,
+                timeout=get_nse_timeout(),
             )
             if response.status_code in (401, 403) and attempt == 1:
                 invalidate_nse_session()
