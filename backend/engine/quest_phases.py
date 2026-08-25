@@ -12,10 +12,9 @@ Phases (lower priority number = higher priority):
     4. premarket       — 9:00–9:15 IST weekday
     5. early           — before 9:00 IST weekday
     6. weekend         — Saturday & Sunday all day
-    7. quiz_backlog    — older unanswered quizzes
 
-Note: `pending_reports` and `quiz_backlog` are *nudge* phases — they override
-the natural phase in the API response but don't represent independent quest
+Note: `pending_reports` is a *nudge* phase — it overrides
+the natural phase in the API response but doesn't represent independent quest
 rows in the DB. Quest rows always carry the natural phase
 (early/premarket/intraday/postmarket/weekend).
 """
@@ -34,7 +33,6 @@ PHASE_PRIORITY: dict[str, int] = {
     "premarket":       4,
     "early":           5,
     "weekend":         6,
-    "quiz_backlog":    7,
 }
 
 NATURAL_PHASES = ("early", "premarket", "intraday", "postmarket", "weekend")
