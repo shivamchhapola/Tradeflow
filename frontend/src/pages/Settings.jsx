@@ -28,6 +28,7 @@ import {
   formatApiError,
 } from "../api";
 
+import { useUnsavedChanges } from "../context/UnsavedChangesContext";
 import "../styles/settings.css";
 
 const LLM_PROVIDERS = [
