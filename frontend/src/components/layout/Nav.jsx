@@ -98,6 +98,21 @@ function DotIcon({ phase }) {
   );
 }
 
+const LEVEL_RANKS = [
+  "Novice Trader",
+  "F&O Apprentice",
+  "Options Practitioner",
+  "Volatility Specialist",
+  "Derivatives Analyst",
+  "Market Strategist",
+  "Master Trader",
+];
+
+function getRankTitle(level) {
+  const index = Math.max(0, level - 1);
+  return LEVEL_RANKS[index] || "Master Trader";
+}
+
 function NavStats() {
   const { user, stats } = useAuth();
   const [pulse, setPulse] = useState(false);
@@ -115,9 +130,13 @@ function NavStats() {
       return;
     }
     if (level > stored) {
-      toast.success(`Level ${level} unlocked`, { duration: 4000 });
+      const rankTitle = getRankTitle(level);
+      toast.success(`🎉 LEVEL UP! You reached Level ${level} · ${rankTitle}`, {
+        duration: 6000,
+        description: `Keep executing disciplined trades and completing daily quests!`,
+      });
       setPulse(true);
-      const t = setTimeout(() => setPulse(false), 1600);
+      const t = setTimeout(() => setPulse(false), 2400);
       localStorage.setItem(key, String(level));
       return () => clearTimeout(t);
     }

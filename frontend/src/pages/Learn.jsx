@@ -3,6 +3,7 @@ import { ChevronDown, GraduationCap } from "lucide-react";
 import { learnContent } from "../lib/learnData";
 import usePageTitle from "../hooks/usePageTitle";
 import { APP_TITLE } from "../lib/copy";
+import AchievementsGrid from "../components/learn/AchievementsGrid";
 
 export default function Learn() {
   usePageTitle(`Learn - ${APP_TITLE.base}`);
@@ -24,6 +25,8 @@ export default function Learn() {
           <LessonCard key={lesson.id} lesson={lesson} defaultOpen={index === 0} />
         ))}
       </div>
+
+      <AchievementsGrid />
     </div>
   );
 }

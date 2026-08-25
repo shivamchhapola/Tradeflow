@@ -18,14 +18,22 @@ import { formatISTDateShort } from "../../lib/time";
 import useAnimatedSize from "../../hooks/useAnimatedSize";
 
 // ── Phase end timer ──────────────────────────────────────────────────────────
-function PhaseEndsIn({ phase, hidden }) {
+function PhaseEndsIn({ phase, hidden, onPhaseEnd }) {
   const [ms, setMs] = useState(() => msToPhaseEnd(phase));
   useEffect(() => {
     if (hidden) return undefined;
-    setMs(msToPhaseEnd(phase));
-    const id = setInterval(() => setMs(msToPhaseEnd(phase)), 60_000);
+    const currentMs = msToPhaseEnd(phase);
+    setMs(currentMs);
+    const pollMs = currentMs != null && currentMs < 60_000 ? 5_000 : 30_000;
+    const id = setInterval(() => {
+      const nextMs = msToPhaseEnd(phase);
+      setMs(nextMs);
+      if (nextMs != null && nextMs <= 0 && typeof onPhaseEnd === "function") {
+        onPhaseEnd();
+      }
+    }, pollMs);
     return () => clearInterval(id);
-  }, [phase, hidden]);
+  }, [phase, hidden, onPhaseEnd]);
   if (hidden || ms == null || ms <= 0) return null;
   return (
     <span
@@ -568,6 +576,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         accent="var(--blue)"
         phase={naturalPhase}
         hideTimer={hideTimer}
+        onPhaseEnd={loadAll}
       >
         <Intro text={intro} />
         <MultiQuizPanel
@@ -593,6 +602,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         accent="var(--border)"
         phase={naturalPhase}
         hideTimer={hideTimer}
+        onPhaseEnd={loadAll}
       >
         <Intro text={intro} />
         <MultiQuizPanel
@@ -621,6 +631,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         accent={accent}
         phase={naturalPhase}
         hideTimer={hideTimer}
+        onPhaseEnd={loadAll}
       >
         <Intro text={intro} />
         <MultiQuizPanel
@@ -678,6 +689,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         accent={isCompleted ? "var(--green)" : "var(--accent)"}
         phase={naturalPhase}
         hideTimer={hideTimer}
+        onPhaseEnd={loadAll}
       >
         <Intro text={intro} />
         <MultiQuizPanel
@@ -713,6 +725,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         accent="var(--quest)"
         phase={naturalPhase}
         hideTimer={hideTimer}
+        onPhaseEnd={loadAll}
       >
         <Intro text={intro} />
         <MultiQuizPanel
@@ -731,7 +744,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
 }
 
 // ── Reusable shell so phase branches stay readable ───────────────────────────
-function CardShell({ icon, title, pillVariant, pillText, accent, phase, hideTimer, children }) {
+function CardShell({ icon, title, pillVariant, pillText, accent, phase, hideTimer, onPhaseEnd, children }) {
   // Smoothly animate the card's height when content grows/shrinks (feedback
   // block appearing, recent dot strip mounting, completion summary, etc.).
   // The hook captures the old height in useLayoutEffect BEFORE the browser
@@ -747,7 +760,7 @@ function CardShell({ icon, title, pillVariant, pillText, accent, phase, hideTime
           {pillText && (
             <span className={`pill pill-${pillVariant}`}>{pillText}</span>
           )}
-          <PhaseEndsIn phase={phase} hidden={hideTimer} />
+          <PhaseEndsIn phase={phase} hidden={hideTimer} onPhaseEnd={onPhaseEnd} />
         </div>
       </div>
       {children}

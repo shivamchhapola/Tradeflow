@@ -11,6 +11,7 @@ Stack: FastAPI (Python) backend, React + Vite frontend, SQLite, Groq API for LLM
 
 ### Branching Strategy & Git Protocol (NON-NEGOTIABLE)
 - **NO DIRECT PUSH TO `main`**: Never commit or push directly to `main`. `main` represents the stable production-ready state.
+- **Explicit Instruction Required**: ONLY perform `git commit`, `git push`, PR creation, or branch merging when the user explicitly asks you to do so. Never autonomously commit, push, create a PR, or merge.
 - **Always Create a Topic Branch**: Before making any code, fix, or dependency changes, verify the current git branch. If on `main`, create and checkout an appropriately named topic branch:
   - `feature/<name>` for new features (e.g., `feature/notifications`)
   - `fix/<name>` for bug fixes (e.g., `fix/setup-guard-race-condition`)

@@ -468,6 +468,11 @@ Carrying forward from the Google Apps Script version:
 | NISM XV certification | Personal study |
 | Friends / cohort leaderboards | Per-user auth shipped — UI surface is the missing piece |
 
+### Future Gamification & Psychology Concepts
+- **Disciplined Execution Scorecard (Rule Compliance Rating)**:
+  - Track a player's **Disciplined Execution Rating** (% SL adherence, zero revenge trade streak, thesis quality) rather than paper profits.
+  - Gamifies self-control and trading psychology over impulse gambling.
+
 ### Auth & multi-user
 Tradeflow now supports multiple accounts via email + bcrypt + JWT. Every user
 has their own paper-trade book, XP / streak, daily quests, and optional Kite
