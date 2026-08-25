@@ -51,7 +51,6 @@ PHASE_CATEGORY_BIAS: dict[str, dict[str, int]] = {
     "intraday":      {"risk": 4, "psychology": 3, "candles": 3, "greeks": 2},
     "postmarket":    {"psychology": 4, "risk": 4, "strategies": 3},
     "weekend":       {"strategies": 4, "greeks": 4, "nse_specifics": 3},
-    "quiz_backlog":  {"strategies": 2, "macro": 2, "risk": 2},
     "pending_reports": {"psychology": 2, "risk": 2},
 }
 

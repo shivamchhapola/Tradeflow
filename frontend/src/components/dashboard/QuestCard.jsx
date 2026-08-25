@@ -530,7 +530,6 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
   // Phase-end timer is suppressed for nudge phases and after completion.
   const hideTimer =
     phase === "pending_reports" ||
-    phase === "quiz_backlog" ||
     quest.status === "completed";
 
   // ── Pending reports nudge ────────────────────────────────────────────────
@@ -711,32 +710,6 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
       <CardShell
         icon={<BookOpen size={16} color="var(--quest)" />}
         title={QUEST.postQuiz}
-        accent="var(--quest)"
-        phase={naturalPhase}
-        hideTimer={hideTimer}
-      >
-        <Intro text={intro} />
-        <MultiQuizPanel
-          questions={questions}
-          quest={quest}
-          onAnswer={handleAnswer}
-          onRefresh={loadAll}
-          submitting={submitting}
-        />
-        <RecentDots items={recent} />
-      </CardShell>
-    );
-  }
-
-  // ── Quiz backlog ─────────────────────────────────────────────────────────
-  if (phase === "quiz_backlog") {
-    const count = data.unanswered_quizzes || 1;
-    return (
-      <CardShell
-        icon={<BookOpen size={16} color="var(--quest)" />}
-        title="Quiz backlog"
-        pillVariant="quest"
-        pillText={`${count} missed`}
         accent="var(--quest)"
         phase={naturalPhase}
         hideTimer={hideTimer}

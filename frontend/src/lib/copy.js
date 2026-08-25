@@ -147,7 +147,6 @@ export const QUIZ_INTRO = {
   intraday:     "Live session — pressure-test your reflexes.",
   postmarket:   "Session closed — review what separates process from luck.",
   weekend:      "Weekend drills: strategy, greeks, and NSE rules.",
-  quiz_backlog: "An earlier quest slipped by — fresh shot at the streak.",
   pending_reports:
     "Mentor reviews are queued — read those first, quizzes wait their turn.",
 };
