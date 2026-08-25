@@ -321,27 +321,3 @@ def quest_history(
         }
         for q in quests
     ]
-
-
-@router.post("/dismiss-backlog")
-def dismiss_backlog(
-    current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_db)
-):
-    """Mark all pending past quests as expired so the backlog is cleared."""
-    today = _today_ist()
-    assert current_user.id is not None
-    pending_past = session.exec(
-        select(DailyQuest)
-        .where(DailyQuest.user_id == current_user.id)
-        .where(DailyQuest.status == "pending")
-        .where(DailyQuest.date < today)
-    ).all()
-
-    for q in pending_past:
-        q.status = "expired"
-        q.expired_at = now_ist().isoformat()
-        session.add(q)
-
-    session.commit()
-    return {"status": "success", "dismissed_count": len(pending_past)}

@@ -11,7 +11,6 @@ import {
   updateQuest,
   submitQuizAnswer,
   getRecentQuests,
-  dismissQuestBacklog,
 } from "../../api";
 import { QUEST, XP, SUCCESS, QUIZ_INTRO } from "../../lib/copy";
 import { msToPhaseEnd, formatCountdown } from "../../lib/phaseClock";
