@@ -231,6 +231,16 @@ export async function testLLM() {
   return data;
 }
 
+export async function testDataSources() {
+  const { data } = await api.post("/settings/data-sources/test");
+  return data;
+}
+
+export async function resetSettingsToDefault() {
+  const { data } = await api.post("/settings/reset");
+  return data;
+}
+
 // ── Notifications ──
 
 export async function getNotifications({ limit = 20, before_id = null, unread_only = false, type_category = null } = {}) {

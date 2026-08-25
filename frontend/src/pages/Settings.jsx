@@ -25,6 +25,8 @@ import {
   updateSettings,
   getLLMStatus,
   testLLM,
+  testDataSources,
+  resetSettingsToDefault,
   formatApiError,
 } from "../api";
 
@@ -186,6 +188,49 @@ export default function Settings() {
       setTestResult({ ok: false, detail: formatApiError(err) });
     } finally {
       setTestLoading(false);
+    }
+  };
+
+  const [dsTestLoading, setDsTestLoading] = useState(false);
+  const [dsTestResult, setDsTestResult] = useState(null);
+
+  const handleTestDataSources = async () => {
+    setDsTestLoading(true);
+    setDsTestResult(null);
+    try {
+      const res = await testDataSources();
+      setDsTestResult(res);
+      if (res.ok) {
+        toast.success("Data sources connection test passed!");
+      } else {
+        toast.error("Data sources connection test failed.");
+      }
+    } catch (err) {
+      setDsTestResult({ ok: false, detail: formatApiError(err) });
+      toast.error("Couldn't test data sources.");
+    } finally {
+      setDsTestLoading(false);
+    }
+  };
+
+  const handleResetDefaults = async () => {
+    if (!window.confirm("Are you sure you want to reset all settings to factory defaults?")) {
+      return;
+    }
+    try {
+      const updated = await resetSettingsToDefault();
+      const status = await getSettingsStatus();
+      setSettings(updated);
+      setConfigStatus(status);
+      setFormLLM(updated.llm || {});
+      setFormDataSources(updated.data_sources || {});
+      setDirty(false);
+      setLlmStatus(null);
+      setTestResult(null);
+      setDsTestResult(null);
+      toast.success("Settings reset to factory defaults.");
+    } catch (err) {
+      toast.error(formatApiError(err, "Couldn't reset settings."));
     }
   };
 
@@ -533,6 +578,64 @@ export default function Settings() {
             hint="HTTP request timeout limit for market data queries (3–60s)."
           />
         </div>
+
+        {/* Data Sources Actions Row */}
+        <div className="settings-actions-row" style={{ marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleFillDefault}
+          >
+            <Zap size={13} />
+            Fill Default URLs
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleTestDataSources}
+            disabled={dsTestLoading}
+          >
+            {dsTestLoading ? (
+              <>
+                <Loader2 size={13} className="spin" />
+                Testing...
+              </>
+            ) : (
+              <>
+                <Zap size={13} />
+                Test Data Sources Connection
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={handleResetDefaults}
+            style={{ color: "var(--red, #ef4444)", marginLeft: "auto" }}
+          >
+            <RotateCcw size={13} />
+            Reset Factory Defaults
+          </button>
+        </div>
+
+        {dsTestResult && (
+          <div className={`settings-test-result ${dsTestResult.ok ? "ok" : "err"}`} style={{ marginTop: 12 }}>
+            <div className="settings-test-result-header">
+              {dsTestResult.ok ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+              <span>{dsTestResult.ok ? "Data Sources Reachable" : "Connection Issue"}</span>
+            </div>
+            {dsTestResult.nse && (
+              <p className="settings-test-preview">
+                <strong>NSE:</strong> {dsTestResult.nse.detail}
+              </p>
+            )}
+            {dsTestResult.yfinance && (
+              <p className="settings-test-preview">
+                <strong>Global Indices:</strong> {dsTestResult.yfinance.detail}
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       {/* ── General ── */}
