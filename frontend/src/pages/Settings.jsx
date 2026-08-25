@@ -15,6 +15,9 @@ import {
   ChevronDown,
   AlertTriangle,
   Sparkles,
+  AlertCircle,
+  RotateCcw,
+  Save,
 } from "lucide-react";
 import {
   getSettings,
@@ -80,6 +83,17 @@ export default function Settings() {
     fetchSettings();
   }, [fetchSettings]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty]);
+
   const handleLLMChange = (key, value) => {
     setFormLLM((prev) => ({ ...prev, [key]: value }));
     setDirty(true);
@@ -100,6 +114,17 @@ export default function Settings() {
     }));
     setDirty(true);
     toast.success("Filled default data source URLs. Click 'Save changes' to complete setup.");
+  };
+
+  const handleCancel = () => {
+    if (settings) {
+      setFormLLM(settings.llm || {});
+      setFormDataSources(settings.data_sources || {});
+      setDirty(false);
+      setLlmStatus(null);
+      setTestResult(null);
+      toast.info("Unsaved changes discarded.");
+    }
   };
 
   const handleSave = async () => {
@@ -551,6 +576,45 @@ export default function Settings() {
           </a>
         </div>
       </section>
+
+      {/* ── Floating Unsaved Changes Bar ── */}
+      {dirty && (
+        <div className="settings-unsaved-bar" role="region" aria-label="Unsaved changes">
+          <div className="settings-unsaved-bar-text">
+            <AlertCircle size={16} className="settings-unsaved-icon" />
+            <span>You have unsaved changes</span>
+          </div>
+          <div className="settings-unsaved-bar-actions">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={handleCancel}
+              disabled={saving}
+            >
+              <RotateCcw size={13} />
+              Discard
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={13} className="spin" />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <Save size={13} />
+                  Save changes
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
