@@ -1,8 +1,18 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, createContext, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { getSettingsStatus } from "../api";
+
+const SetupContext = createContext({
+  checked: false,
+  isConfigured: true,
+  refreshSetupStatus: () => {},
+});
+
+export function useSetupStatus() {
+  return useContext(SetupContext);
+}
 
 export default function SetupGuard({ children }) {
   const { user } = useAuth();
@@ -21,7 +31,11 @@ export default function SetupGuard({ children }) {
       const status = await getSettingsStatus();
       setIsConfigured(status.is_configured);
 
-      if (!status.is_configured && location.pathname !== "/settings") {
+      if (
+        !status.is_configured &&
+        location.pathname !== "/settings" &&
+        location.pathname !== "/learn"
+      ) {
         const now = Date.now();
         if (now - lastToastTimeRef.current > 5000) {
           toast.error("Initial setup required. Please configure your data sources.", {
@@ -46,7 +60,8 @@ export default function SetupGuard({ children }) {
   const isAllowedPath =
     location.pathname === "/settings" ||
     location.pathname === "/login" ||
-    location.pathname === "/signup";
+    location.pathname === "/signup" ||
+    location.pathname === "/learn";
 
   if (!checked && user && !isAllowedPath) {
     return null;
@@ -56,5 +71,9 @@ export default function SetupGuard({ children }) {
     return null;
   }
 
-  return children;
+  return (
+    <SetupContext.Provider value={{ checked, isConfigured, refreshSetupStatus: checkStatus }}>
+      {children}
+    </SetupContext.Provider>
+  );
 }

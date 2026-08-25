@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Settings as SettingsIcon,
@@ -12,15 +13,24 @@ import {
   ExternalLink,
   Info,
   ChevronDown,
+  AlertTriangle,
+  Sparkles,
+  AlertCircle,
+  RotateCcw,
+  Save,
 } from "lucide-react";
 import {
   getSettings,
+  getSettingsStatus,
   updateSettings,
   getLLMStatus,
   testLLM,
+  testDataSources,
+  resetSettingsToDefault,
   formatApiError,
 } from "../api";
 
+import { useUnsavedChanges } from "../context/UnsavedChangesContext";
 import "../styles/settings.css";
 
 const LLM_PROVIDERS = [
@@ -39,7 +49,14 @@ const LLM_PROVIDERS = [
 ];
 
 export default function Settings() {
+  const [searchParams] = useSearchParams();
+  const isOnboarding = searchParams.get("onboarding") === "true";
+  const navigate = useNavigate();
+
+  const { setIsDirty, registerSaveHandler, registerDiscardHandler } = useUnsavedChanges();
+
   const [settings, setSettings] = useState(null);
+  const [configStatus, setConfigStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [llmStatus, setLlmStatus] = useState(null);
@@ -52,10 +69,15 @@ export default function Settings() {
   const [formDataSources, setFormDataSources] = useState({});
   const [dirty, setDirty] = useState(false);
 
+  useEffect(() => {
+    setIsDirty(dirty);
+  }, [dirty, setIsDirty]);
+
   const fetchSettings = useCallback(async () => {
     try {
-      const data = await getSettings();
+      const [data, status] = await Promise.all([getSettings(), getSettingsStatus()]);
       setSettings(data);
+      setConfigStatus(status);
       setFormLLM(data.llm || {});
       setFormDataSources(data.data_sources || {});
       setDirty(false);
@@ -82,23 +104,66 @@ export default function Settings() {
     setDirty(true);
   };
 
-  const handleSave = async () => {
+  const handleFillDefault = () => {
+    setFormDataSources((prev) => ({
+      ...prev,
+      nse_base_url: "https://www.nseindia.com",
+      yfinance_base_url: "https://query1.finance.yahoo.com",
+    }));
+    setDirty(true);
+    toast.success("Filled default data source URLs. Click 'Save changes' to complete setup.");
+  };
+
+  const handleCancel = useCallback(() => {
+    if (settings) {
+      setFormLLM(settings.llm || {});
+      setFormDataSources(settings.data_sources || {});
+      setDirty(false);
+      setLlmStatus(null);
+      setTestResult(null);
+      toast.info("Unsaved changes discarded.");
+    }
+  }, [settings]);
+
+  const handleSave = useCallback(async () => {
+    if (!formDataSources.nse_base_url?.trim()) {
+      toast.error("NSE Base URL is required to complete initial setup.");
+      return false;
+    }
+
     setSaving(true);
     try {
       const updated = await updateSettings({ llm: formLLM, data_sources: formDataSources });
+      const status = await getSettingsStatus();
       setSettings(updated);
+      setConfigStatus(status);
       setFormLLM(updated.llm || {});
       setFormDataSources(updated.data_sources || {});
       setDirty(false);
       setLlmStatus(null);
       setTestResult(null);
-      toast.success("Settings saved.");
+
+      if (status.is_configured) {
+        toast.success("Setup complete! All features unlocked.");
+        if (isOnboarding) {
+          navigate("/", { replace: true });
+        }
+      } else {
+        toast.success("Settings saved.");
+      }
+      return true;
     } catch (err) {
       toast.error(formatApiError(err, "Couldn't save settings."));
+      return false;
     } finally {
       setSaving(false);
     }
-  };
+  }, [formDataSources, formLLM, isOnboarding, navigate]);
+
+  useEffect(() => {
+    registerSaveHandler(handleSave);
+    registerDiscardHandler(handleCancel);
+  }, [registerSaveHandler, registerDiscardHandler, handleSave, handleCancel]);
 
   const handleStatusCheck = async () => {
     setStatusLoading(true);
@@ -123,6 +188,49 @@ export default function Settings() {
       setTestResult({ ok: false, detail: formatApiError(err) });
     } finally {
       setTestLoading(false);
+    }
+  };
+
+  const [dsTestLoading, setDsTestLoading] = useState(false);
+  const [dsTestResult, setDsTestResult] = useState(null);
+
+  const handleTestDataSources = async () => {
+    setDsTestLoading(true);
+    setDsTestResult(null);
+    try {
+      const res = await testDataSources();
+      setDsTestResult(res);
+      if (res.ok) {
+        toast.success("Data sources connection test passed!");
+      } else {
+        toast.error("Data sources connection test failed.");
+      }
+    } catch (err) {
+      setDsTestResult({ ok: false, detail: formatApiError(err) });
+      toast.error("Couldn't test data sources.");
+    } finally {
+      setDsTestLoading(false);
+    }
+  };
+
+  const handleResetDefaults = async () => {
+    if (!window.confirm("Are you sure you want to reset all settings to factory defaults?")) {
+      return;
+    }
+    try {
+      const updated = await resetSettingsToDefault();
+      const status = await getSettingsStatus();
+      setSettings(updated);
+      setConfigStatus(status);
+      setFormLLM(updated.llm || {});
+      setFormDataSources(updated.data_sources || {});
+      setDirty(false);
+      setLlmStatus(null);
+      setTestResult(null);
+      setDsTestResult(null);
+      toast.success("Settings reset to factory defaults.");
+    } catch (err) {
+      toast.error(formatApiError(err, "Couldn't reset settings."));
     }
   };
 
@@ -168,6 +276,60 @@ export default function Settings() {
           </button>
         )}
       </header>
+
+      {/* ── Onboarding / Setup Required Banner ── */}
+      {configStatus && !configStatus.is_configured && (
+        <div
+          style={{
+            background: "rgba(245, 158, 11, 0.1)",
+            border: "1px solid rgba(245, 158, 11, 0.3)",
+            borderRadius: "var(--radius-md, 12px)",
+            padding: "16px 20px",
+            marginBottom: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 260 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                background: "rgba(245, 158, 11, 0.2)",
+                color: "var(--amber, #f59e0b)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text-primary, #fff)" }}>
+                Initial Setup Required
+              </h3>
+              <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--text-secondary, #aaa)", lineHeight: 1.4 }}>
+                Please set up your <strong>NSE Base URL</strong> under Data Sources below to unlock the platform.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleFillDefault}
+            style={{ fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            <Sparkles size={13} color="var(--amber, #f59e0b)" />
+            Fill Default URL
+          </button>
+        </div>
+      )}
+
 
       {/* ── LLM Provider ── */}
       <section className="settings-section">
@@ -243,6 +405,13 @@ export default function Settings() {
                 type="password"
               />
               <SettingsField
+                label="Groq Base URL"
+                value={formLLM.groq_base_url || ""}
+                onChange={(v) => handleLLMChange("groq_base_url", v)}
+                placeholder="https://api.groq.com/openai/v1"
+                hint="Base URL for Groq API endpoint or compatible proxy."
+              />
+              <SettingsField
                 label="Model"
                 value={formLLM.groq_model || ""}
                 onChange={(v) => handleLLMChange("groq_model", v)}
@@ -251,6 +420,36 @@ export default function Settings() {
               />
             </>
           )}
+          <div className="settings-field">
+            <label className="settings-field-label">Mentor Coaching Persona</label>
+            <select
+              className="settings-field-input"
+              value={formLLM.mentor_persona || "supportive"}
+              onChange={(e) => handleLLMChange("mentor_persona", e.target.value)}
+              style={{ background: "var(--bg-input, #121214)", color: "var(--text-primary, #fff)" }}
+            >
+              <option value="supportive">Supportive Coach — Encouraging tone & constructive guidance</option>
+              <option value="strict">Strict Risk Manager — Direct & uncompromising on discipline</option>
+              <option value="educator">Textbook Educator — Deep dive into Greeks, IV & options structure</option>
+            </select>
+            <p className="settings-field-hint">Defines the coaching personality used in LLM trade reports.</p>
+          </div>
+          <SettingsField
+            label="Temperature (Creativity)"
+            value={formLLM.temperature ?? 0.7}
+            onChange={(v) => handleLLMChange("temperature", v)}
+            type="number"
+            placeholder="0.7"
+            hint="Randomness level between 0.0 (deterministic) and 1.0 (creative)."
+          />
+          <SettingsField
+            label="Max Tokens"
+            value={formLLM.max_tokens ?? 600}
+            onChange={(v) => handleLLMChange("max_tokens", v)}
+            type="number"
+            placeholder="600"
+            hint="Maximum response token limit for report generation (200–2000)."
+          />
         </div>
 
         {/* Actions row */}
@@ -344,17 +543,99 @@ export default function Settings() {
             label="NSE Base URL"
             value={formDataSources.nse_base_url || ""}
             onChange={(v) => handleDataSourceChange("nse_base_url", v)}
-            placeholder="https://..."
-            hint="The base URL used to construct option chain and market status requests. Refer to DATA_SOURCES.md for valid links."
+            placeholder="https://www.nseindia.com"
+            hint="Base URL for GIFT Nifty, option chain, and index chart requests. Refer to DATA_SOURCES.md for valid links."
           />
-          <div className="settings-field">
-            <label className="settings-field-label">Global Indices</label>
-            <div className="settings-field-value-static">
-              <span className="settings-badge">yfinance</span>
-              <span className="settings-field-hint">NASDAQ, S&P 500, Nikkei, VIX, DXY, Crude, US 10Y</span>
-            </div>
-          </div>
+          <SettingsField
+            label="Global Indices Base URL (Yahoo Finance / Proxy)"
+            value={formDataSources.yfinance_base_url || ""}
+            onChange={(v) => handleDataSourceChange("yfinance_base_url", v)}
+            placeholder="https://query1.finance.yahoo.com"
+            hint="Base endpoint or proxy URL for global indices data (NASDAQ, S&P 500, Nikkei, VIX, DXY, Crude, US 10Y)."
+          />
+          <SettingsField
+            label="Option Chain Polling Interval (Seconds)"
+            value={formDataSources.option_chain_interval ?? 60}
+            onChange={(v) => handleDataSourceChange("option_chain_interval", v)}
+            type="number"
+            placeholder="60"
+            hint="Frequency in seconds to poll live option chain data during market hours (15–300s)."
+          />
+          <SettingsField
+            label="Intraday Chart Polling Interval (Seconds)"
+            value={formDataSources.chart_interval ?? 60}
+            onChange={(v) => handleDataSourceChange("chart_interval", v)}
+            type="number"
+            placeholder="60"
+            hint="Frequency in seconds to poll intraday candlestick chart data (15–300s)."
+          />
+          <SettingsField
+            label="Network Request Timeout (Seconds)"
+            value={formDataSources.request_timeout ?? 10}
+            onChange={(v) => handleDataSourceChange("request_timeout", v)}
+            type="number"
+            placeholder="10"
+            hint="HTTP request timeout limit for market data queries (3–60s)."
+          />
         </div>
+
+        {/* Data Sources Actions Row */}
+        <div className="settings-actions-row" style={{ marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleFillDefault}
+          >
+            <Zap size={13} />
+            Fill Default URLs
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleTestDataSources}
+            disabled={dsTestLoading}
+          >
+            {dsTestLoading ? (
+              <>
+                <Loader2 size={13} className="spin" />
+                Testing...
+              </>
+            ) : (
+              <>
+                <Zap size={13} />
+                Test Data Sources Connection
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={handleResetDefaults}
+            style={{ color: "var(--red, #ef4444)", marginLeft: "auto" }}
+          >
+            <RotateCcw size={13} />
+            Reset Factory Defaults
+          </button>
+        </div>
+
+        {dsTestResult && (
+          <div className={`settings-test-result ${dsTestResult.ok ? "ok" : "err"}`} style={{ marginTop: 12 }}>
+            <div className="settings-test-result-header">
+              {dsTestResult.ok ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+              <span>{dsTestResult.ok ? "Data Sources Reachable" : "Connection Issue"}</span>
+            </div>
+            {dsTestResult.nse && (
+              <p className="settings-test-preview">
+                <strong>NSE:</strong> {dsTestResult.nse.detail}
+              </p>
+            )}
+            {dsTestResult.yfinance && (
+              <p className="settings-test-preview">
+                <strong>Global Indices:</strong> {dsTestResult.yfinance.detail}
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       {/* ── General ── */}
@@ -405,6 +686,45 @@ export default function Settings() {
           </a>
         </div>
       </section>
+
+      {/* ── Floating Unsaved Changes Bar ── */}
+      {dirty && (
+        <div className="settings-unsaved-bar" role="region" aria-label="Unsaved changes">
+          <div className="settings-unsaved-bar-text">
+            <AlertCircle size={16} className="settings-unsaved-icon" />
+            <span>You have unsaved changes</span>
+          </div>
+          <div className="settings-unsaved-bar-actions">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={handleCancel}
+              disabled={saving}
+            >
+              <RotateCcw size={13} />
+              Discard
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={13} className="spin" />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <Save size={13} />
+                  Save changes
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

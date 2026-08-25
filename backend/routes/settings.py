@@ -15,7 +15,7 @@ from typing import Optional
 
 from auth.dependencies import get_current_user
 from models import User
-from settings import get_settings, update_settings, mask_secrets
+from settings import get_settings, update_settings, mask_secrets, check_settings_configured
 from llm.provider import get_llm_provider
 
 logger = logging.getLogger("tradeflow.routes.settings")
@@ -30,13 +30,15 @@ def read_settings(current_user: User = Depends(get_current_user)):
     return mask_secrets(get_settings())
 
 
-@router.get("/status")
-def settings_status(current_user: User = Depends(get_current_user)):
-    """Check if initial configuration has been completed."""
-    settings = get_settings()
-    is_configured = bool(settings)
-    return {"is_configured": is_configured, "settings": mask_secrets(settings)}
+# ── GET /api/settings/status ──
 
+@router.get("/status")
+def settings_configuration_status(current_user: User = Depends(get_current_user)):
+    """Return whether required settings are configured."""
+    return check_settings_configured()
+
+
+from data.nse_session import invalidate_nse_session
 
 # ── PUT /api/settings ──
 
@@ -61,6 +63,9 @@ def write_settings(
 
     if not patch:
         raise HTTPException(400, "No settings provided.")
+
+    if body.data_sources is not None:
+        invalidate_nse_session()
 
     updated = update_settings(patch)
     return mask_secrets(updated)
@@ -112,3 +117,63 @@ def llm_test(current_user: User = Depends(get_current_user)):
             "latency_ms": 0,
             "detail": str(e),
         }
+
+
+# ── POST /api/settings/data-sources/test ──
+
+@router.post("/data-sources/test")
+def data_sources_test(current_user: User = Depends(get_current_user)):
+    """Test connection to NSE Base URL and Global Indices Base URL."""
+    import requests
+    from data.nse_session import get_nse_base_url, get_nse_headers, get_nse_timeout
+    from data.fetcher import get_yfinance_base_url
+
+    nse_url = get_nse_base_url()
+    yf_url = get_yfinance_base_url()
+    timeout = get_nse_timeout()
+
+    results = {"ok": True, "nse": {}, "yfinance": {}}
+
+    # Test NSE
+    if not nse_url:
+        results["nse"] = {"ok": False, "detail": "NSE Base URL is not configured."}
+        results["ok"] = False
+    else:
+        try:
+            headers = get_nse_headers()
+            r = requests.get(nse_url, headers=headers, timeout=timeout)
+            if r.status_code == 200:
+                results["nse"] = {"ok": True, "detail": f"NSE Base URL ({nse_url}) reachable (HTTP 200)."}
+            else:
+                results["nse"] = {"ok": False, "detail": f"NSE returned HTTP {r.status_code}."}
+                results["ok"] = False
+        except Exception as e:
+            results["nse"] = {"ok": False, "detail": f"Cannot connect to NSE Base URL: {e}"}
+            results["ok"] = False
+
+    # Test Yahoo Finance / Global Indices
+    try:
+        url = f"{yf_url}/v8/finance/chart/%5ENSEI?range=1d&interval=1d"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        r = requests.get(url, headers=headers, timeout=timeout)
+        if r.status_code == 200:
+            results["yfinance"] = {"ok": True, "detail": f"Global Indices Base URL ({yf_url}) reachable (HTTP 200)."}
+        else:
+            results["yfinance"] = {"ok": False, "detail": f"Global Indices returned HTTP {r.status_code}."}
+            results["ok"] = False
+    except Exception as e:
+        results["yfinance"] = {"ok": False, "detail": f"Cannot connect to Global Indices Base URL: {e}"}
+        results["ok"] = False
+
+    return results
+
+
+# ── POST /api/settings/reset ──
+
+@router.post("/reset")
+def reset_settings(current_user: User = Depends(get_current_user)):
+    """Reset settings back to factory defaults."""
+    from settings import DEFAULTS, update_settings
+    updated = update_settings(DEFAULTS)
+    invalidate_nse_session()
+    return mask_secrets(updated)

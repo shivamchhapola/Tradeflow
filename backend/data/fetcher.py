@@ -23,6 +23,7 @@ from data.nse_session import (
     get_nse_session,
     invalidate_nse_session,
     get_nse_base_url,
+    get_nse_timeout,
 )
 
 log = logging.getLogger(__name__)
@@ -56,7 +57,7 @@ def _fetch_gift_nifty_change_pct() -> Optional[float]:
         try:
             session = get_nse_session()
             resp = session.get(
-                url, headers=get_nse_headers(), timeout=10
+                url, headers=get_nse_headers(), timeout=get_nse_timeout()
             )
             if resp.status_code in (401, 403) and attempt == 1:
                 # Cookie expired — drop the cached session and retry once.
@@ -79,24 +80,46 @@ def _fetch_gift_nifty_change_pct() -> Optional[float]:
     return None
 
 
-# ---------------------------------------------------------------------------
-# yfinance helper
-# ---------------------------------------------------------------------------
+from urllib.parse import quote
+import requests
+from settings import get_settings
+
+
+def get_yfinance_base_url() -> str:
+    url = get_settings().get("data_sources", {}).get("yfinance_base_url", "https://query1.finance.yahoo.com")
+    return (url or "https://query1.finance.yahoo.com").rstrip("/")
+
 
 def _fetch_yfinance_change_pct(symbol: str) -> Optional[float]:
-    # `period="5d"` (not 2d) so we still get >= 2 daily bars on weekends,
-    # US holidays, and contract-roll gaps. CME/ICE futures (CL=F, DX-Y.NYB)
-    # don't trade Friday-evening → Sunday-evening; a 2-day window over a
-    # Sunday returns ONE row for them (just Friday) and we'd silently mark
-    # the market unavailable. 5d is the smallest window that covers a full
-    # business week so we always have a previous-close to compare against.
-    # The response is still tiny — no perf cost over 2d.
+    base_url = get_yfinance_base_url()
+    try:
+        url = f"{base_url}/v8/finance/chart/{quote(symbol)}?range=5d&interval=1d"
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            )
+        }
+        resp = requests.get(url, headers=headers, timeout=get_nse_timeout())
+        if resp.status_code == 200:
+            data = resp.json()
+            result = data.get("chart", {}).get("result", [])
+            if result:
+                quotes = result[0].get("indicators", {}).get("quote", [{}])[0].get("close", [])
+                valid_closes = [float(c) for c in quotes if c is not None]
+                if len(valid_closes) >= 2:
+                    prev = valid_closes[-2]
+                    last = valid_closes[-1]
+                    if prev != 0:
+                        return round(((last - prev) / prev) * 100, 2)
+    except Exception as err:
+        log.debug("Direct chart fetch for %s failed via %s: %s", symbol, base_url, err)
+
+    # Fallback to yfinance ticker history
     try:
         hist = yf.Ticker(symbol).history(period="5d")
         if len(hist) < 2:
-            # Explicit log so future "unavailable" rows aren't mysterious —
-            # the silent `return None` here was what made this hard to
-            # debug the first time around.
             log.warning(
                 "yfinance %s: only %d bar(s) returned, need >=2 for %% change.",
                 symbol, len(hist),

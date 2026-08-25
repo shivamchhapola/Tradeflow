@@ -16,9 +16,19 @@ logger = logging.getLogger("tradeflow.llm.ollama")
 
 class OllamaProvider(LLMProvider):
 
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = "qwen3.5:4b"):
+    def __init__(
+        self,
+        base_url: str = "http://localhost:11434",
+        model: str = "qwen3.5:4b",
+        temperature: float = 0.7,
+        max_tokens: int = 600,
+        persona: str = "supportive",
+    ):
         self._base_url = base_url.rstrip("/")
         self._model = model
+        self._temperature = temperature
+        self._max_tokens = max_tokens
+        self._persona = persona
 
     @property
     def provider_name(self) -> str:
@@ -39,8 +49,8 @@ class OllamaProvider(LLMProvider):
                     "stream": False,
                     "think": False,
                     "options": {
-                        "temperature": 0.7,
-                        "num_predict": 600,
+                        "temperature": self._temperature,
+                        "num_predict": self._max_tokens,
                     },
                 },
                 timeout=300,

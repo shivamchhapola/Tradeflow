@@ -218,6 +218,7 @@ export async function updateSettings(patch) {
   return data;
 }
 
+
 export async function getLLMStatus() {
   const { data } = await api.get("/settings/llm/status");
   return data;
@@ -227,6 +228,16 @@ export async function testLLM() {
   const { data } = await api.post("/settings/llm/test", null, {
     timeout: 120000, // LLM test can be slow on CPU
   });
+  return data;
+}
+
+export async function testDataSources() {
+  const { data } = await api.post("/settings/data-sources/test");
+  return data;
+}
+
+export async function resetSettingsToDefault() {
+  const { data } = await api.post("/settings/reset");
   return data;
 }
 

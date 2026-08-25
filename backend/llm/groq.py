@@ -14,9 +14,21 @@ logger = logging.getLogger("tradeflow.llm.groq")
 
 class GroqProvider(LLMProvider):
 
-    def __init__(self, api_key: str = "", model: str = "llama-3.1-8b-instant"):
+    def __init__(
+        self,
+        api_key: str = "",
+        model: str = "llama-3.1-8b-instant",
+        base_url: str = "",
+        temperature: float = 0.7,
+        max_tokens: int = 600,
+        persona: str = "supportive",
+    ):
         self._api_key = api_key
         self._model = model
+        self._base_url = base_url.strip()
+        self._temperature = temperature
+        self._max_tokens = max_tokens
+        self._persona = persona
 
     @property
     def provider_name(self) -> str:
@@ -42,12 +54,15 @@ class GroqProvider(LLMProvider):
             )
 
         try:
-            client = Groq(api_key=self._api_key)
+            kwargs = {"api_key": self._api_key}
+            if self._base_url:
+                kwargs["base_url"] = self._base_url
+            client = Groq(**kwargs)
             response = client.chat.completions.create(
                 model=self._model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=600,
+                temperature=self._temperature,
+                max_tokens=self._max_tokens,
             )
             text = response.choices[0].message.content
             if not text:
@@ -80,7 +95,10 @@ class GroqProvider(LLMProvider):
             }
 
         try:
-            client = Groq(api_key=self._api_key)
+            kwargs = {"api_key": self._api_key}
+            if self._base_url:
+                kwargs["base_url"] = self._base_url
+            client = Groq(**kwargs)
             models = client.models.list()
             model_ids = [m.id for m in models.data] if hasattr(models, 'data') else []
 

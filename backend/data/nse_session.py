@@ -28,6 +28,14 @@ def get_nse_base_url() -> str:
     url = get_settings().get("data_sources", {}).get("nse_base_url", "")
     return url.rstrip("/")
 
+def get_nse_timeout() -> int:
+    timeout = get_settings().get("data_sources", {}).get("request_timeout", 10)
+    try:
+        val = int(timeout)
+        return max(3, min(val, 60))
+    except (ValueError, TypeError):
+        return 10
+
 def get_nse_headers() -> dict:
     base_url = get_nse_base_url()
     return {
@@ -62,7 +70,7 @@ def get_nse_session() -> requests.Session:
         with _lock:
             if _session is None:
                 s = requests.Session()
-                s.get(base_url, headers=get_nse_headers(), timeout=10)
+                s.get(base_url, headers=get_nse_headers(), timeout=get_nse_timeout())
                 _session = s
                 log.info("NSE session initialised (cookie warmed up).")
     return _session

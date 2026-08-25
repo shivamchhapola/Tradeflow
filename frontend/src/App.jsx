@@ -17,6 +17,8 @@ import BottomNav from "./components/layout/BottomNav";
 import { RouteFallback, NotFound } from "./components/layout/RouteFallback";
 
 import { NotificationProvider } from "./context/NotificationContext";
+import { UnsavedChangesProvider } from "./context/UnsavedChangesContext";
+import SetupWarningBanner from "./components/layout/SetupWarningBanner";
 import ErrorDetailsModal from "./components/notifications/ErrorDetailsModal";
 
 import "react-tooltip/dist/react-tooltip.css";
@@ -35,6 +37,7 @@ function AppContent() {
   return (
     <div className="app">
       <Nav />
+      <SetupWarningBanner />
       <main className={`main ${location.pathname === "/trade" ? "main-trade" : ""} ${(location.pathname === "/login" || location.pathname === "/signup") ? "main-auth" : ""}`}>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
@@ -64,7 +67,9 @@ export default function App() {
           <ErrorBoundary>
             <NotificationProvider>
               <SetupGuard>
-                <AppContent />
+                <UnsavedChangesProvider>
+                  <AppContent />
+                </UnsavedChangesProvider>
               </SetupGuard>
             </NotificationProvider>
           </ErrorBoundary>

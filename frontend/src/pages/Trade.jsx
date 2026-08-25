@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { closeTrade, createTrade, getOpenTrades, getOptionChain } from "../api";
+import { closeTrade, createTrade, getOpenTrades, getOptionChain, getSettings } from "../api";
 import OpenPositions from "../components/trade/OpenPositions";
 import OptionPremiumChart from "../components/trade/OptionPremiumChart";
 import OptionChain from "../components/trade/OptionChain";
@@ -13,7 +13,6 @@ import usePageTitle from "../hooks/usePageTitle";
 import { marketPhase } from "../lib/time";
 
 const SYMBOL = "NIFTY";
-const LIVE_REFRESH_MS = 15_000; // 15s — matches NSE website's own refresh cadence
 
 export default function Trade() {
   const [chain, setChain] = useState(null);
@@ -22,6 +21,7 @@ export default function Trade() {
   const [chainLoading, setChainLoading] = useState(false);
   const [openTrades, setOpenTrades] = useState([]);
   const [chartRefreshToken, setChartRefreshToken] = useState(0);
+  const [refreshInterval, setRefreshInterval] = useState(15_000);
 
   const [chartContract, setChartContract] = useState({
     isIndex: true,
@@ -34,6 +34,17 @@ export default function Trade() {
   const [, startTransition] = useTransition();
 
   usePageTitle("Trade");
+
+  useEffect(() => {
+    getSettings()
+      .then((s) => {
+        const oci = s?.data_sources?.option_chain_interval;
+        if (oci && !isNaN(oci)) {
+          setRefreshInterval(Math.max(5, oci) * 1000);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const loadOpenTrades = useCallback(async () => {
     try {
@@ -79,7 +90,7 @@ export default function Trade() {
         fetchChain({ silent: true });
         setChartRefreshToken((t) => t + 1);
       }
-    }, LIVE_REFRESH_MS);
+    }, refreshInterval);
 
     return () => clearInterval(id);
   }, [fetchChain]);
