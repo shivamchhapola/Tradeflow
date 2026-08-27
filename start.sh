@@ -2,7 +2,7 @@
 
 if [ ! -f ".env" ]; then
     if [ -f ".env.example" ]; then
-        echo "[.env] Creating .env from .env.example with active defaults (VITE_API_URL, NSE_BASE_URL)..."
+        echo "[.env] Creating .env from .env.example..."
         cp .env.example .env
     fi
 fi

@@ -52,9 +52,9 @@ DEFAULTS = {
     "data_sources": {
         "option_chain": "nse",
         "gift_nifty": "nse",
-        "nse_base_url": "https://www.nseindia.com",
+        "nse_base_url": "",
         "global_indices": "yfinance",
-        "yfinance_base_url": "https://query1.finance.yahoo.com",
+        "yfinance_base_url": "",
         "option_chain_interval": 60,
         "chart_interval": 60,
         "request_timeout": 10,
