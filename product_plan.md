@@ -473,6 +473,13 @@ Carrying forward from the Google Apps Script version:
   - Track a player's **Disciplined Execution Rating** (% SL adherence, zero revenge trade streak, thesis quality) rather than paper profits.
   - Gamifies self-control and trading psychology over impulse gambling.
 
+### Future Developer Experience & Setup Improvements
+- **Zero-Touch Auto-Setup Start Script (`start.bat` / `start.sh`)**:
+  - Automatically copy `.env.example` to `.env` if `.env` is missing on first run.
+  - Automatically create Python `.venv` and install backend requirements if `.venv` is missing.
+  - Automatically run `npm install` in `frontend/` if `node_modules` is missing.
+  - Execute full setup and launch both backend and frontend in a single `start` command.
+
 ### Auth & multi-user
 Tradeflow now supports multiple accounts via email + bcrypt + JWT. Every user
 has their own paper-trade book, XP / streak, daily quests, and optional Kite
