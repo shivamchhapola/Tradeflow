@@ -234,7 +234,14 @@
   color: var(--text-muted);
 }
 
-/* P&L */
+/* P&L & ROI % */
+.pos-card-pnl-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+}
+
 .pos-card-pnl {
   font-family: var(--font-mono);
   font-size: 13px;
@@ -245,6 +252,25 @@
 .pos-card-pnl.muted {
   color: var(--text-muted);
   font-size: 11px;
+}
+
+.pos-card-roi {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.pos-card-roi.bull {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--green);
+}
+
+.pos-card-roi.bear {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--red);
 }
 
 /* SL→LTP→Target progress track */
