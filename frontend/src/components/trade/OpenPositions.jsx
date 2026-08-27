@@ -20,13 +20,20 @@ export default function OpenPositions({ trades, onTradesChange, chain }) {
 
   // Build live LTP map
   const ltpMap = useMemo(() => {
-    // eslint-disable-next-line react-hooks/refs
-    if (!chain?.data) return prevLtpRef.current;
+    if (!chain) return prevLtpRef.current;
     const map = {};
-    for (const d of chain.data) {
-      if (!d.CE && !d.PE) continue;
-      if (d.CE) map[`NIFTY ${d.strikePrice} CE`] = d.CE.lastPrice;
-      if (d.PE) map[`NIFTY ${d.strikePrice} PE`] = d.PE.lastPrice;
+    if (Array.isArray(chain.strikes)) {
+      for (const s of chain.strikes) {
+        if (s.ce_ltp > 0) map[`NIFTY ${s.strike} CE`] = s.ce_ltp;
+        if (s.pe_ltp > 0) map[`NIFTY ${s.strike} PE`] = s.pe_ltp;
+      }
+    } else if (Array.isArray(chain.data)) {
+      for (const d of chain.data) {
+        if (d.CE) map[`NIFTY ${d.strikePrice} CE`] = d.CE.lastPrice;
+        if (d.PE) map[`NIFTY ${d.strikePrice} PE`] = d.PE.lastPrice;
+      }
+    } else {
+      return prevLtpRef.current;
     }
     return map;
   }, [chain]);
@@ -56,6 +63,16 @@ export default function OpenPositions({ trades, onTradesChange, chain }) {
       const ltp = getLtp(trade);
       if (ltp === null) return null;
       return (ltp - trade.entry_price) * trade.quantity * (trade.direction === "BUY" ? 1 : -1);
+    },
+    [getLtp]
+  );
+
+  const computeRoiPct = useCallback(
+    (trade) => {
+      const ltp = getLtp(trade);
+      if (ltp === null || !trade.entry_price || trade.entry_price <= 0) return null;
+      const dir = trade.direction === "BUY" ? 1 : -1;
+      return (((ltp - trade.entry_price) * dir) / trade.entry_price) * 100;
     },
     [getLtp]
   );
@@ -143,6 +160,7 @@ export default function OpenPositions({ trades, onTradesChange, chain }) {
         {trades.map((trade) => {
           const ltp = getLtp(trade);
           const pnl = computePnL(trade);
+          const roiPct = computeRoiPct(trade);
           const isProfit = pnl !== null && pnl >= 0;
           const isExiting = exitingId === trade.id;
           const isAdjusting = adjustingId === trade.id;
@@ -222,16 +240,23 @@ export default function OpenPositions({ trades, onTradesChange, chain }) {
 
               {/* Price row: entry → LTP */}
               <div className="pos-card-prices">
-                <span className="pos-card-entry">₹{trade.entry_price.toFixed(1)}</span>
+                <span className="pos-card-entry" title="Entry Price">₹{trade.entry_price.toFixed(1)}</span>
                 <span className="pos-card-arrow">→</span>
-                <span className={`pos-card-ltp ${ltp ? (isProfit ? "bull" : "bear") : "muted"}`}>
+                <span className={`pos-card-ltp ${ltp ? (isProfit ? "bull" : "bear") : "muted"}`} title="Current Price (LTP)">
                   {ltp ? `₹${ltp.toFixed(1)}` : "--"}
                 </span>
               </div>
 
-              {/* P&L */}
-              <div className={`pos-card-pnl ${pnl !== null ? (isProfit ? "bull" : "bear") : "muted"}`}>
-                {pnl !== null ? signedInr(pnl) : "--"}
+              {/* P&L & % Return (ROI) */}
+              <div className="pos-card-pnl-row">
+                <span className={`pos-card-pnl ${pnl !== null ? (isProfit ? "bull" : "bear") : "muted"}`}>
+                  {pnl !== null ? signedInr(pnl) : "--"}
+                </span>
+                {roiPct !== null && (
+                  <span className={`pos-card-roi ${roiPct >= 0 ? "bull" : "bear"}`}>
+                    {roiPct >= 0 ? "+" : ""}{roiPct.toFixed(1)}%
+                  </span>
+                )}
               </div>
 
               {/* SL → LTP → Target progress track */}

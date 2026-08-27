@@ -19,7 +19,7 @@ export function NotificationProvider({ children }) {
   
   const prevFilterRef = useRef(activeFilter);
 
-  const fetchInitial = useCallback(async (filter = activeFilter) => {
+  const fetchInitial = useCallback(async () => {
     if (!user) {
       setNotifications([]);
       setUnreadCount(0);
@@ -29,9 +29,7 @@ export function NotificationProvider({ children }) {
     }
     setLoading(true);
     try {
-      const typeCat = filter === "trades" ? "trades" : filter === "errors" ? "errors" : null;
-      const unreadOnly = filter === "unread";
-      const res = await getNotifications({ limit: 20, unread_only: unreadOnly, type_category: typeCat });
+      const res = await getNotifications({ limit: 50 });
       setNotifications(res.items || []);
       setUnreadCount(res.unread_count || 0);
       setHasMore(res.has_more || false);
@@ -41,19 +39,15 @@ export function NotificationProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [user, activeFilter]);
+  }, [user]);
 
   const fetchNextPage = useCallback(async () => {
     if (!user || !hasMore || !nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const typeCat = activeFilter === "trades" ? "trades" : activeFilter === "errors" ? "errors" : null;
-      const unreadOnly = activeFilter === "unread";
       const res = await getNotifications({
         limit: 20,
         before_id: nextCursor,
-        unread_only: unreadOnly,
-        type_category: typeCat,
       });
       setNotifications((prev) => [...prev, ...(res.items || [])]);
       setUnreadCount(res.unread_count || 0);
@@ -64,7 +58,7 @@ export function NotificationProvider({ children }) {
     } finally {
       setLoadingMore(false);
     }
-  }, [user, hasMore, nextCursor, loadingMore, activeFilter]);
+  }, [user, hasMore, nextCursor, loadingMore]);
 
   const refreshUnreadCount = useCallback(async () => {
     if (!user) return;
@@ -76,15 +70,15 @@ export function NotificationProvider({ children }) {
     }
   }, [user]);
 
-  // Polling unread count every 15s when user is logged in
+  // Initial fetch and polling unread count every 15s when user is logged in
   useEffect(() => {
     if (!user) return undefined;
-    fetchInitial(activeFilter);
+    fetchInitial();
     const interval = setInterval(() => {
       refreshUnreadCount();
     }, 15000);
     return () => clearInterval(interval);
-  }, [user, activeFilter, fetchInitial, refreshUnreadCount]);
+  }, [user, fetchInitial, refreshUnreadCount]);
 
   const handleFilterChange = (newFilter) => {
     setActiveFilter(newFilter);

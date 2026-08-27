@@ -20,6 +20,15 @@ export default function ErrorDetailsModal() {
     timeStyle: "medium",
   });
 
+  const isError = selectedError.type === "system_error" || selectedError.type === "error";
+  const isTrade = ["trade_executed", "manual_close", "target_hit", "stop_hit", "auto_squareoff"].includes(selectedError.type);
+
+  const modalTitle = isError ? "Error Details" : isTrade ? "Trade Details" : "Notification Details";
+  const headerBg = isError ? "rgba(239, 68, 68, 0.08)" : "rgba(59, 130, 246, 0.08)";
+  const iconBg = isError ? "rgba(239, 68, 68, 0.15)" : "rgba(59, 130, 246, 0.15)";
+  const iconColor = isError ? "var(--red, #ef4444)" : "var(--accent-light, #60a5fa)";
+  const codeColor = isError ? "#f87171" : "var(--text-primary, #e2e8f0)";
+
   return (
     <div
       style={{
@@ -61,7 +70,7 @@ export default function ErrorDetailsModal() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "rgba(239, 68, 68, 0.08)",
+            background: headerBg,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -70,14 +79,14 @@ export default function ErrorDetailsModal() {
                 width: 32,
                 height: 32,
                 borderRadius: 8,
-                background: "rgba(239, 68, 68, 0.15)",
-                color: "var(--red, #ef4444)",
+                background: iconBg,
+                color: iconColor,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <AlertTriangle size={18} />
+              {isError ? <AlertTriangle size={18} /> : <Terminal size={18} />}
             </div>
             <div>
               <h3
@@ -89,7 +98,7 @@ export default function ErrorDetailsModal() {
                   color: "var(--text-primary, #ffffff)",
                 }}
               >
-                Error Details
+                {modalTitle}
               </h3>
               <span style={{ fontSize: 11, color: "var(--text-muted, #888)", display: "block" }}>
                 {formattedDate}
@@ -149,7 +158,7 @@ export default function ErrorDetailsModal() {
                 }}
               >
                 <Terminal size={12} />
-                Technical Stack / Response Payload
+                {isError ? "Technical Stack / Response Payload" : "Trade & Execution Details"}
               </span>
               <button
                 type="button"
@@ -173,7 +182,7 @@ export default function ErrorDetailsModal() {
                 borderRadius: 8,
                 background: "#09090b",
                 border: "1px solid var(--border-strong, #2a2a32)",
-                color: "#f87171",
+                color: codeColor,
                 fontFamily: "var(--font-mono, monospace)",
                 fontSize: 11,
                 lineHeight: 1.6,
@@ -183,7 +192,7 @@ export default function ErrorDetailsModal() {
                 overflowY: "auto",
               }}
             >
-              {selectedError.details || selectedError.message || "No stack trace or additional details recorded."}
+              {selectedError.details || selectedError.message || "No additional details recorded."}
             </pre>
           </div>
         </div>

@@ -13,7 +13,6 @@ import { marketPhase } from "../../lib/time";
 const LIVE_REFRESH_MS = 15_000;  // 15s — matches NSE website's own refresh cadence
 
 const RANGE_SECONDS = {
-  "1h": 3600,
   "2h": 7200,
   "4h": 14400,
   day: 86400,
@@ -55,16 +54,22 @@ function vwap(candles) {
 }
 
 function applyVisibleRange(chart, candles, rangeKey) {
-  if (!candles.length) return;
+  if (!chart || !candles || !candles.length) return;
   if (rangeKey === "day") {
     chart.timeScale().fitContent();
     return;
   }
-  const last = candles[candles.length - 1].time;
-  const span = RANGE_SECONDS[rangeKey] ?? RANGE_SECONDS["2h"];
-  const from = Math.max(candles[0].time, last - span);
+
+  const lastCandle = candles[candles.length - 1];
+  const firstCandle = candles[0];
+  if (!lastCandle || !firstCandle) return;
+
+  const span = RANGE_SECONDS[rangeKey] ?? 7200;
+  const toTime = lastCandle.time;
+  const fromTime = Math.max(firstCandle.time, toTime - span);
+
   try {
-    chart.timeScale().setVisibleRange({ from, to: last + 120 });
+    chart.timeScale().setVisibleRange({ from: fromTime, to: toTime });
   } catch {
     chart.timeScale().fitContent();
   }
@@ -89,7 +94,7 @@ export default function OptionPremiumChart({
   const [showSma9, setShowSma9] = useState(true);
   const [showSma21, setShowSma21] = useState(true);
   const [showVwap, setShowVwap] = useState(false);
-  const [visibleRange, setVisibleRange] = useState("1h");
+  const [visibleRange, setVisibleRange] = useState("2h");
 
   const title = contract?.isIndex
     ? "NIFTY 50 Index"
@@ -99,15 +104,25 @@ export default function OptionPremiumChart({
       }`
     : "Chart";
 
+  const currentContractKey = contract?.isIndex
+    ? "__index__"
+    : (contract?.identifier ?? "__none__");
+
   const loadCandles = useCallback(
     async ({ silent = false } = {}) => {
       if (!contract) return;
+      const isContractSwitch = currentContractKey !== prevContractKeyRef.current;
+
       if (!silent) setLoading(true);
       if (!silent) setError("");
-      // Clear stale data immediately so the candles effect never fires with
-      // old data while the new contract's request is in-flight.
-      // Silent refreshes keep the previous frame visible (no blank flash).
-      if (!silent) setData(null);
+
+      // Clear stale data ONLY when switching to a different contract/symbol.
+      // Refreshes for the same contract keep existing candles visible so the
+      // chart view never flashes, unmounts, or resets under the user.
+      if (!silent && isContractSwitch) {
+        setData(null);
+      }
+
       try {
         let result;
         if (contract.isIndex) {
@@ -162,7 +177,7 @@ export default function OptionPremiumChart({
         if (!silent) setLoading(false);
       }
     },
-    [contract]
+    [contract, currentContractKey]
   );
 
   useEffect(() => {
@@ -277,79 +292,70 @@ export default function OptionPremiumChart({
     };
   }, []);
 
-  /**
-   * On silent refresh (every 15s), only update the last candle via
-   * series.update() instead of replacing all data with setData().
-   * This prevents the chart view from jumping/resetting while the user
-   * is scrolling through history.
-   *
-   * Two separate effects handle contract switching vs candle painting so they
-   * never interfere:
-   *  (1) useEffect([contract])      — resets prevCandlesRef on every contract
-   *                                   change, no chart drawing involved.
-   *  (2) useEffect([candles, ...])  — does the actual setData / update()
-   *                                   but does NOT list `contract` as a dep,
-   *                                   so it never fires with stale NIFTY candles
-   *                                   while a new option fetch is in-flight.
-   */
   const prevCandlesRef = useRef([]);
   const prevContractKeyRef = useRef(null);
 
   // Effect 1 — contract switch detector.
-  // Resets prevCandlesRef so the next candle paint always does a full setData.
-  // This runs ONLY when contract changes, never when candles change.
+  // Resets prevCandlesRef so the next candle paint always does a full setData + range fit.
   useEffect(() => {
-    const newKey = contract?.isIndex
-      ? "__index__"
-      : (contract?.identifier ?? "__none__");
-    if (newKey !== prevContractKeyRef.current) {
+    if (currentContractKey !== prevContractKeyRef.current) {
       prevCandlesRef.current = [];
-      prevContractKeyRef.current = newKey;
+      prevContractKeyRef.current = currentContractKey;
     }
-  }, [contract]);
+  }, [currentContractKey]);
 
   // Effect 2 — candle painter.
-  // `contract` is intentionally NOT in deps: we never want this to run
-  // with stale candles just because the contract prop changed.
+  // Updates candle series in-place without resetting scale/viewport during data refreshes.
   useEffect(() => {
     if (!candles.length || !candleSeriesRef.current) return;
 
     const prev = prevCandlesRef.current;
     const isInitialLoad = prev.length === 0;
-    const newCount = candles.length - prev.length;
 
-    if (isInitialLoad || newCount > 1) {
-      // First load or new contract data: full replace + reset price scale.
+    if (isInitialLoad) {
+      // Contract initial load: set data, auto-scale price axis, apply initial visible range.
       candleSeriesRef.current.setData(candles);
       smaFastRef.current?.setData(showSma9 ? sma(candles, 9) : []);
       smaSlowRef.current?.setData(showSma21 ? sma(candles, 21) : []);
       vwapRef.current?.setData(showVwap ? vwap(candles) : []);
 
-      // Reset price axis so switching from NIFTY (~24 000) to option (~200)
-      // doesn't leave the axis anchored to the old range.
       chartRef.current?.priceScale("right").applyOptions({ autoScale: true });
 
       setTimeout(() => {
         if (chartRef.current) applyVisibleRange(chartRef.current, candles, visibleRange);
       }, 50);
     } else {
-      // Silent 15s tick: update only the forming candle (append-only).
-      const lastCandle = candles[candles.length - 1];
-      try {
-        candleSeriesRef.current?.update(lastCandle);
-      } catch {
-        candleSeriesRef.current.setData(candles);
-      }
+      // Seamless in-place update for data refreshes (same contract):
+      // Preserves existing chart zoom/pan position.
+      candleSeriesRef.current.setData(candles);
       smaFastRef.current?.setData(showSma9 ? sma(candles, 9) : []);
       smaSlowRef.current?.setData(showSma21 ? sma(candles, 21) : []);
       vwapRef.current?.setData(showVwap ? vwap(candles) : []);
     }
 
     prevCandlesRef.current = candles;
-  }, [candles, showSma9, showSma21, showVwap, visibleRange]); // contract intentionally omitted
+  }, [candles, showSma9, showSma21, showVwap]);
+
+  // Effect 3 — explicit range chip change handler (1h, 2h, 4h, day).
+  const prevVisibleRangeRef = useRef(visibleRange);
+  useEffect(() => {
+    if (prevVisibleRangeRef.current !== visibleRange) {
+      prevVisibleRangeRef.current = visibleRange;
+      if (chartRef.current && candles.length) {
+        applyVisibleRange(chartRef.current, candles, visibleRange);
+      }
+    }
+  }, [visibleRange, candles]);
 
   const intervalLabel = contract?.isIndex ? data?.interval || "5m" : "5m";
   const isMarketClosed = error === "market_closed";
+
+  const handleRangeClick = (key) => {
+    setVisibleRange(key);
+    if (chartRef.current && candles.length) {
+      applyVisibleRange(chartRef.current, candles, key);
+    }
+  };
 
   return (
     <div className="trade-chart">
@@ -415,7 +421,7 @@ export default function OptionPremiumChart({
             className={`chip chart-range-chip ${
               visibleRange === key ? "active" : ""
             }`}
-            onClick={() => setVisibleRange(key)}
+            onClick={() => handleRangeClick(key)}
           >
             {key.toUpperCase()}
           </button>

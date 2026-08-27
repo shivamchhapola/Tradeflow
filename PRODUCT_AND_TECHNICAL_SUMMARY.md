@@ -18,6 +18,7 @@
 
 ### 2. 📈 Live Paper Trading & Option Chain
 - **Option Chain**: Real-time Nifty 50 option chain with LTPs, IV, and strike selections.
+- **Active Position Cards**: Real-time position tracking displaying entry price → live LTP, signed P&L in ₹, percentage profit/loss return (% ROI), and interactive SL/Target progress bars.
 - **Mandatory Risk Controls**: Trade entries require mandatory **Stop-Loss (SL)** and **Take-Profit (Target)** levels.
 - **Thesis Bonus**: Logging a trade thesis ($\ge 30$ characters) awards **+15 XP**.
 - **Auto Square-Off**: Open positions are automatically closed at 3:15 PM IST (15 minutes prior to market close).

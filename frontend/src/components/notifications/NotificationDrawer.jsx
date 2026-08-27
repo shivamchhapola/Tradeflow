@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   X,
   CheckCheck,
@@ -34,6 +34,13 @@ export default function NotificationDrawer() {
 
   const drawerRef = useRef(null);
   const observerTarget = useRef(null);
+
+  // Reset filter to "all" when opening the drawer
+  useEffect(() => {
+    if (isDrawerOpen) {
+      setActiveFilter("all");
+    }
+  }, [isDrawerOpen, setActiveFilter]);
 
   // Close drawer on Outside click or Escape key
   useEffect(() => {
@@ -81,6 +88,29 @@ export default function NotificationDrawer() {
       }
     };
   }, [isDrawerOpen, hasMore, loadingMore, fetchNextPage]);
+
+  const filteredNotifications = useMemo(() => {
+    if (activeFilter === "unread") {
+      return notifications.filter((n) => !n.is_read);
+    }
+    if (activeFilter === "trades") {
+      return notifications.filter((n) =>
+        ["trade_executed", "stop_hit", "target_hit", "manual_close", "auto_squareoff"].includes(n.type)
+      );
+    }
+    if (activeFilter === "errors") {
+      return notifications.filter((n) => ["system_error", "error"].includes(n.type));
+    }
+    return notifications;
+  }, [notifications, activeFilter]);
+
+  const emptyMessages = {
+    all: "No notifications recorded yet.",
+    unread: "All caught up! No unread notifications.",
+    trades: "No trade notifications recorded yet.",
+    errors: "All good! No system errors reported.",
+  };
+  const emptyText = emptyMessages[activeFilter] || "No notifications found";
 
   if (!isDrawerOpen) return null;
 
@@ -205,12 +235,12 @@ export default function NotificationDrawer() {
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: 36, color: "var(--text-muted, #888)" }}>
             <Loader2 size={20} className="animate-spin" />
           </div>
-        ) : notifications.length === 0 ? (
+        ) : filteredNotifications.length === 0 ? (
           <div style={{ textAlign: "center", padding: "36px 16px", color: "var(--text-muted, #777)", fontSize: 13 }}>
-            No notifications found
+            {emptyText}
           </div>
         ) : (
-          notifications.map((item) => (
+          filteredNotifications.map((item) => (
             <NotificationCard
               key={item.id}
               item={item}
@@ -257,7 +287,8 @@ function FilterTab({ label, active, onClick }) {
 }
 
 function NotificationCard({ item, onMarkRead, onOpenDetails }) {
-  const isError = item.type === "system_error" || item.type === "error" || item.details != null;
+  const isError = item.type === "system_error" || item.type === "error";
+  const hasDetails = Boolean(item.details);
   
   const iconConfig = getNotificationIcon(item.type);
 
@@ -325,7 +356,7 @@ function NotificationCard({ item, onMarkRead, onOpenDetails }) {
           {item.message}
         </p>
 
-        {isError && (
+        {hasDetails && (
           <button
             type="button"
             onClick={(e) => {
@@ -339,16 +370,16 @@ function NotificationCard({ item, onMarkRead, onOpenDetails }) {
               gap: 4,
               fontSize: 10,
               fontWeight: 600,
-              color: "var(--red, #ef4444)",
-              background: "rgba(239, 68, 68, 0.1)",
-              border: "1px solid rgba(239, 68, 68, 0.2)",
+              color: isError ? "var(--red, #ef4444)" : "var(--accent-light, #60a5fa)",
+              background: isError ? "rgba(239, 68, 68, 0.1)" : "rgba(59, 130, 246, 0.1)",
+              border: isError ? "1px solid rgba(239, 68, 68, 0.2)" : "1px solid rgba(59, 130, 246, 0.2)",
               borderRadius: 4,
               padding: "2px 6px",
               cursor: "pointer",
             }}
           >
-            <ExternalLink size={10} />
-            View Error Details
+            {isError ? <AlertTriangle size={10} /> : <ExternalLink size={10} />}
+            {isError ? "View Error Details" : "View Details"}
           </button>
         )}
       </div>
