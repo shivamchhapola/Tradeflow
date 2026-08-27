@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 if not exist ".env" (
     if exist ".env.example" (
-        echo [.env] Creating .env from .env.example...
+        echo [.env] Creating .env from .env.example with active defaults (VITE_API_URL, NSE_BASE_URL)...
         copy ".env.example" ".env" >nul
     )
 )

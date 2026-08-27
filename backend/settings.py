@@ -52,7 +52,7 @@ DEFAULTS = {
     "data_sources": {
         "option_chain": "nse",
         "gift_nifty": "nse",
-        "nse_base_url": "",
+        "nse_base_url": "https://www.nseindia.com",
         "global_indices": "yfinance",
         "yfinance_base_url": "https://query1.finance.yahoo.com",
         "option_chain_interval": 60,
@@ -130,10 +130,18 @@ def _validate(settings: dict) -> dict:
     except (TypeError, ValueError):
         ds["request_timeout"] = DEFAULTS["data_sources"]["request_timeout"]
 
-    # Allow Docker / Environment override for Ollama URL
+    # Allow Docker / Environment overrides
     env_ollama = os.environ.get("OLLAMA_BASE_URL")
     if env_ollama and "llm" in settings:
         settings["llm"]["ollama_base_url"] = env_ollama
+
+    env_nse = os.environ.get("NSE_BASE_URL")
+    if env_nse and "data_sources" in settings and env_nse.strip():
+        settings["data_sources"]["nse_base_url"] = env_nse.strip()
+
+    env_groq = os.environ.get("GROQ_API_KEY")
+    if env_groq and "llm" in settings and env_groq.strip():
+        settings["llm"]["groq_api_key"] = env_groq.strip()
 
     return settings
 
