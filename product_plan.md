@@ -472,6 +472,9 @@ Carrying forward from the Google Apps Script version:
 - **Disciplined Execution Scorecard (Rule Compliance Rating)**:
   - Track a player's **Disciplined Execution Rating** (% SL adherence, zero revenge trade streak, thesis quality) rather than paper profits.
   - Gamifies self-control and trading psychology over impulse gambling.
+- **Dedicated Achievements Page & Profile Integration**:
+  - Dedicated `/achievements` route and full-screen modal accessible from Profile / Quests (`View All Achievements`).
+  - Scoped achievements strictly to user profile/quests rather than duplicating in the Learn Academy.
 
 ### Future Developer Experience & Setup Improvements
 - **Zero-Touch Auto-Setup Start Script (`start.bat` / `start.sh`)**:
