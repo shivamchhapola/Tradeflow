@@ -150,23 +150,11 @@ function DashboardContent({ data, error, onRun, running }) {
 
   return (
     <div className="page dashboard-container">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
-          gap: 12,
-          /* Allow wrap on narrow viewports so the freshness chip + refresh
-             button drop to a second line under the title instead of getting
-             squeezed into 80 px and clipping. */
-          flexWrap: "wrap",
-        }}
-      >
-        <h1 style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.2px" }}>
+      <div className="page-header">
+        <h1 className="page-title">
           {DASHBOARD.pageTitle}
         </h1>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+        <div className="page-header-actions">
           {running ? (
             <span
               className="data-freshness is-refreshing"

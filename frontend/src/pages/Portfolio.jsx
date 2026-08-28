@@ -61,7 +61,9 @@ export default function Portfolio() {
 
   return (
     <div className="page portfolio-page">
-      <h1 className="portfolio-page-title">{PORTFOLIO.pageTitle}</h1>
+      <div className="page-header">
+        <h1 className="page-title">{PORTFOLIO.pageTitle}</h1>
+      </div>
 
       {/* Hero */}
       <div className="portfolio-hero">

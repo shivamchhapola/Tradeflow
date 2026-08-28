@@ -236,7 +236,7 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="settings-page">
+      <div className="page settings-page">
         <div className="settings-loading">
           <Loader2 size={20} className="spin" />
           <span>Loading settings…</span>
@@ -248,14 +248,14 @@ export default function Settings() {
   const currentProvider = formLLM.provider || "ollama";
 
   return (
-    <div className="settings-page">
-      <header className="settings-header">
-        <div className="settings-header-text">
-          <h1 className="settings-title">
-            <SettingsIcon size={22} />
+    <div className="page settings-page">
+      <header className="settings-header page-header">
+        <div>
+          <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+            <SettingsIcon size={18} />
             Settings
           </h1>
-          <p className="settings-subtitle">
+          <p className="page-subtitle">
             Configure integrations and preferences. Changes are saved to{" "}
             <code>settings.json</code> — editable by hand too.
           </p>
