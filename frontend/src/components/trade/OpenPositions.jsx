@@ -1,20 +1,22 @@
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { Zap, X, Edit3, Check } from "lucide-react";
+import { Zap, X, Edit3, Check, FileText } from "lucide-react";
 import { toast } from "sonner";
 
-import { closeTrade } from "../../api";
+import { closeTrade, updateTradeThesis } from "../../api";
 import { signedInr } from "../../lib/format";
 import { invalidateStats } from "../../hooks/useStats";
 
 /**
- * Positions bar — a fixed-height horizontal strip of cards.
- * Cards scroll horizontally so the bar never grows vertically,
- * no matter how many positions are open.
+ * Positions bar — displays active open trades with live LTPs, P&L, SL/Target tracking,
+ * quick exit, price adjustments, and post-entry thesis logging (+15 XP).
  */
 export default function OpenPositions({ trades, onTradesChange, chain }) {
   const [adjustingId, setAdjustingId] = useState(null);
   const [adjustPrice, setAdjustPrice] = useState("");
   const [adjustReason, setAdjustReason] = useState("manual");
+  const [editingThesisId, setEditingThesisId] = useState(null);
+  const [thesisText, setThesisText] = useState("");
+  const [savingThesis, setSavingThesis] = useState(false);
   const [exitingId, setExitingId] = useState(null);
   const prevLtpRef = useRef({});
 
@@ -80,10 +82,19 @@ export default function OpenPositions({ trades, onTradesChange, chain }) {
   /** Where does the current LTP sit on the SL→Target scale (0–100%)? */
   const computeLtpBar = (trade) => {
     const ltp = getLtp(trade);
-    const { stop_loss: sl, target: tgt } = trade;
-    if (!ltp || !sl || !tgt || sl >= tgt) return null;
-    const pct = ((ltp - sl) / (tgt - sl)) * 100;
-    return Math.max(0, Math.min(100, pct));
+    const { stop_loss: sl, target: tgt, direction } = trade;
+    if (!ltp || !sl || !tgt) return null;
+
+    if (direction === "BUY") {
+      if (sl >= tgt) return null;
+      const pct = ((ltp - sl) / (tgt - sl)) * 100;
+      return Math.max(0, Math.min(100, pct));
+    } else {
+      // For SELL (Short): SL is above entry (high price = loss), TGT is below entry (low price = gain)
+      if (sl <= tgt) return null;
+      const pct = ((sl - ltp) / (sl - tgt)) * 100;
+      return Math.max(0, Math.min(100, pct));
+    }
   };
 
   const handleQuickExit = useCallback(
@@ -136,6 +147,38 @@ export default function OpenPositions({ trades, onTradesChange, chain }) {
     [adjustPrice, adjustReason, onTradesChange]
   );
 
+  const handleStartThesis = useCallback((trade) => {
+    setEditingThesisId(trade.id);
+    setThesisText(trade.thesis || "");
+  }, []);
+
+  const handleSaveThesis = useCallback(
+    async (tradeId) => {
+      const text = thesisText.trim();
+      if (!text) {
+        setEditingThesisId(null);
+        return;
+      }
+      setSavingThesis(true);
+      try {
+        const res = await updateTradeThesis(tradeId, text);
+        if (res.xp_awarded > 0) {
+          toast.success(`Thesis saved! +${res.xp_awarded} XP banked.`);
+        } else {
+          toast.success("Thesis updated.");
+        }
+        setEditingThesisId(null);
+        invalidateStats();
+        onTradesChange();
+      } catch (err) {
+        toast.error("Couldn't save thesis.");
+      } finally {
+        setSavingThesis(false);
+      }
+    },
+    [thesisText, onTradesChange]
+  );
+
   if (trades.length === 0) {
     return (
       <div className="pos-bar pos-bar-empty">
@@ -183,6 +226,13 @@ export default function OpenPositions({ trades, onTradesChange, chain }) {
                 </span>
                 {!isAdjusting && (
                   <div className="pos-card-actions">
+                    <button
+                      className="pos-card-btn pos-card-thesis"
+                      onClick={() => handleStartThesis(trade)}
+                      title={trade.thesis ? "Edit thesis" : "Add thesis (+15 XP)"}
+                    >
+                      <FileText size={11} />
+                    </button>
                     <button
                       className="pos-card-btn pos-card-adjust"
                       onClick={() => handleStartAdjust(trade)}
@@ -276,6 +326,42 @@ export default function OpenPositions({ trades, onTradesChange, chain }) {
                   </div>
                   <span className="pos-card-track-tgt">TGT</span>
                 </div>
+              )}
+
+              {/* Post-entry thesis inline editor */}
+              {editingThesisId === trade.id ? (
+                <div className="pos-card-thesis-form">
+                  <textarea
+                    rows={2}
+                    className="pos-card-textarea"
+                    placeholder="Why did you enter this trade? (≥30 chars for +15 XP)"
+                    value={thesisText}
+                    onChange={(e) => setThesisText(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="pos-card-thesis-actions">
+                    <button
+                      className="pos-card-btn pos-card-confirm"
+                      onClick={() => handleSaveThesis(trade.id)}
+                      disabled={savingThesis || !thesisText.trim()}
+                      style={{ padding: "4px 8px", fontSize: 10 }}
+                    >
+                      <Check size={10} /> Save Thesis (+15 XP)
+                    </button>
+                    <button
+                      className="pos-card-btn pos-card-cancel"
+                      onClick={() => setEditingThesisId(null)}
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                trade.thesis && (
+                  <div className="pos-card-thesis-preview" onClick={() => handleStartThesis(trade)}>
+                    <span>“{trade.thesis}”</span>
+                  </div>
+                )
               )}
             </div>
           );

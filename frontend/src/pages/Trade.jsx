@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Table, Activity } from "lucide-react";
 
 import { closeTrade, createTrade, getOpenTrades, getOptionChain, getSettings } from "../api";
 import OpenPositions from "../components/trade/OpenPositions";
@@ -22,6 +23,7 @@ export default function Trade() {
   const [openTrades, setOpenTrades] = useState([]);
   const [chartRefreshToken, setChartRefreshToken] = useState(0);
   const [refreshInterval, setRefreshInterval] = useState(15_000);
+  const [activeTab, setActiveTab] = useState("chain"); // "chain" | "positions"
 
   const [chartContract, setChartContract] = useState({
     isIndex: true,
@@ -182,7 +184,7 @@ export default function Trade() {
   }, []);
 
   const handleBuyClick = useCallback((strikeData, type) => {
-    // Open the trade ticket. TradeTicket handles zero/missing LTP gracefully.
+    // Open the trade ticket modal. TradeTicket handles zero/missing LTP gracefully.
     setSelectedStrike({ ...strikeData, type, initialDirection: "BUY" });
   }, []);
 
@@ -195,10 +197,11 @@ export default function Trade() {
       setSubmitting(true);
       try {
         await createTrade(tradeData);
-        toast.success("Trade placed.");
+        toast.success("Trade placed successfully.");
         setSelectedStrike(null);
         invalidateStats();
         loadOpenTrades();
+        setActiveTab("positions"); // Auto switch to Open Positions tab to view the order
       } catch (err) {
         toast.error(
           err.response?.data?.detail || "Trade failed. Check backend.",
@@ -234,38 +237,70 @@ export default function Trade() {
         )}
 
         <div className="trade-chain-panel">
-          <OptionChain
-            chain={chain}
-            error={chainError}
-            loading={chainLoading}
-            symbol={SYMBOL}
-            onSelectChart={handleSelectChart}
-            onBuyClick={handleBuyClick}
-            onSellClick={handleSellClick}
-            chartContract={chartContract}
-          />
+          <div className="trade-panel-tabs">
+            <button
+              type="button"
+              className={`trade-panel-tab ${activeTab === "chain" ? "active" : ""}`}
+              onClick={() => setActiveTab("chain")}
+            >
+              <Table size={14} />
+              <span>Option Chain</span>
+            </button>
+            <button
+              type="button"
+              className={`trade-panel-tab ${activeTab === "positions" ? "active" : ""}`}
+              onClick={() => setActiveTab("positions")}
+            >
+              <Activity size={14} />
+              <span>Open Positions</span>
+              {openTrades.length > 0 && (
+                <span className="trade-tab-badge">{openTrades.length}</span>
+              )}
+            </button>
+          </div>
+
+          {activeTab === "chain" ? (
+            <OptionChain
+              chain={chain}
+              error={chainError}
+              loading={chainLoading}
+              symbol={SYMBOL}
+              onSelectChart={handleSelectChart}
+              onBuyClick={handleBuyClick}
+              onSellClick={handleSellClick}
+              chartContract={chartContract}
+            />
+          ) : (
+            <OpenPositions
+              trades={openTrades}
+              onTradesChange={loadOpenTrades}
+              chain={chain}
+            />
+          )}
         </div>
 
-        {/* Trade ticket — right-side drawer, accessible even when chart is hidden */}
+        {/* Trade ticket — Centered Modal Dialog */}
         {selectedStrike && (
-          <div className="trade-ticket-drawer">
-            <TradeTicket
-              selected={selectedStrike}
-              symbol={SYMBOL}
-              lotSize={LOT_SIZES[SYMBOL]}
-              onPlace={handlePlace}
-              onClear={() => setSelectedStrike(null)}
-              submitting={submitting}
-            />
+          <div
+            className="trade-ticket-modal-overlay"
+            onClick={() => setSelectedStrike(null)}
+          >
+            <div
+              className="trade-ticket-modal-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <TradeTicket
+                selected={selectedStrike}
+                symbol={SYMBOL}
+                lotSize={LOT_SIZES[SYMBOL]}
+                onPlace={handlePlace}
+                onClear={() => setSelectedStrike(null)}
+                submitting={submitting}
+              />
+            </div>
           </div>
         )}
       </div>
-
-      <OpenPositions
-        trades={openTrades}
-        onTradesChange={loadOpenTrades}
-        chain={chain}
-      />
     </div>
   );
 }
