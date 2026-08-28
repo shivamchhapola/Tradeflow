@@ -438,6 +438,48 @@ function FeedbackBlock({ feedback, questions, onNext }) {
   );
 }
 
+function PendingReportsBanner({ count, navigate }) {
+  if (!count || count <= 0) return null;
+  return (
+    <div
+      style={{
+        padding: "10px 12px",
+        background: "var(--amber-bg, rgba(245, 158, 11, 0.1))",
+        border: "1px solid var(--amber-border, rgba(245, 158, 11, 0.3))",
+        borderRadius: "var(--radius-sm)",
+        marginBottom: 14,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 10,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--amber)", fontWeight: 500 }}>
+        <FileText size={15} />
+        <span>
+          {count === 1
+            ? "1 closed trade waiting for mentor report (+10 XP)"
+            : `${count} closed trades waiting for mentor reports (+10 XP)`}
+        </span>
+      </div>
+      <button
+        type="button"
+        className="btn btn-ghost btn-xs"
+        onClick={() => navigate("/reports")}
+        style={{
+          color: "var(--amber)",
+          borderColor: "var(--amber-border, rgba(245, 158, 11, 0.3))",
+          whiteSpace: "nowrap",
+          fontSize: 11,
+          padding: "4px 8px",
+        }}
+      >
+        View Reports <ArrowRight size={12} />
+      </button>
+    </div>
+  );
+}
+
 // ── Main card ────────────────────────────────────────────────────────────────
 export default function QuestCard({ score, metrics, sessionLabel }) {
   void score; void metrics; void sessionLabel;
@@ -511,11 +553,6 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
   };
 
   if (loading) {
-    // Render through CardShell so the same DOM node persists when the real
-    // content arrives — useAnimatedSize records the loading height and
-    // animates from it to the full quest height. Without this, the loading
-    // card unmounts and a brand-new CardShell mounts at full size, giving
-    // the user an abrupt snap.
     return (
       <CardShell
         icon={<Target size={16} color="var(--text-muted)" />}
@@ -531,44 +568,31 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
 
   const phase = data?.phase || "premarket";
   const naturalPhase = data?.natural_phase || phase;
+  const effectivePhase = phase === "pending_reports" ? naturalPhase : phase;
   const quest = data?.quest || {};
   const questions = data?.questions || [];
-  const intro = QUIZ_INTRO[phase] || QUIZ_INTRO[naturalPhase] || "";
+  const intro = QUIZ_INTRO[effectivePhase] || QUIZ_INTRO[naturalPhase] || "";
+  const pendingReportsCount = data?.pending_reports || 0;
 
-  // Phase-end timer is suppressed for nudge phases and after completion.
-  const hideTimer =
-    phase === "pending_reports" ||
-    quest.status === "completed";
+  const hideTimer = quest.status === "completed";
 
-  // ── Pending reports nudge ────────────────────────────────────────────────
-  if (phase === "pending_reports") {
-    const count = data.pending_reports || 1;
-    return (
-      <CardShell
-        icon={<FileText size={16} color="var(--amber)" />}
-        title="Reports waiting"
-        pillVariant="amber"
-        pillText={`${count} unread`}
-        accent="var(--amber)"
-        phase="pending_reports"
-        hideTimer
-      >
-        <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: 16 }}>
-          {count === 1
-            ? "1 closed trade hasn't had its mentor review generated yet."
-            : `${count} closed trades are waiting for mentor reviews.`}
-          {" "}Reading the review awards +10 XP.
-        </div>
-        <button type="button" className="btn btn-ghost btn-block" onClick={() => navigate("/reports")}>
-          Go to Reports <ArrowRight size={14} />
-        </button>
-        <RecentDots items={recent} />
-      </CardShell>
-    );
-  }
+  // ── Generic Quiz Panel logic ─────────────────────────────────────────────
+  const renderQuizContent = () => (
+    <>
+      <PendingReportsBanner count={pendingReportsCount} navigate={navigate} />
+      <Intro text={intro} />
+      <MultiQuizPanel
+        questions={questions}
+        quest={quest}
+        onAnswer={handleAnswer}
+        onRefresh={loadAll}
+        submitting={submitting}
+      />
+    </>
+  );
 
   // ── Weekend ──────────────────────────────────────────────────────────────
-  if (phase === "weekend") {
+  if (effectivePhase === "weekend") {
     return (
       <CardShell
         icon={<Moon size={16} color="var(--blue)" />}
@@ -578,21 +602,14 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         hideTimer={hideTimer}
         onPhaseEnd={loadAll}
       >
-        <Intro text={intro} />
-        <MultiQuizPanel
-          questions={questions}
-          quest={quest}
-          onAnswer={handleAnswer}
-          onRefresh={loadAll}
-          submitting={submitting}
-        />
+        {renderQuizContent()}
         <RecentDots items={recent} />
       </CardShell>
     );
   }
 
   // ── Early (before 9 AM weekday) ──────────────────────────────────────────
-  if (phase === "early") {
+  if (effectivePhase === "early") {
     return (
       <CardShell
         icon={<Clock size={16} color="var(--text-muted)" />}
@@ -604,21 +621,14 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         hideTimer={hideTimer}
         onPhaseEnd={loadAll}
       >
-        <Intro text={intro} />
-        <MultiQuizPanel
-          questions={questions}
-          quest={quest}
-          onAnswer={handleAnswer}
-          onRefresh={loadAll}
-          submitting={submitting}
-        />
+        {renderQuizContent()}
         <RecentDots items={recent} />
       </CardShell>
     );
   }
 
   // ── Premarket (9:00–9:15) ────────────────────────────────────────────────
-  if (phase === "premarket") {
+  if (effectivePhase === "premarket") {
     const isAccepted = quest.status === "accepted";
     const isCompleted = quest.status === "completed";
     const accent = isCompleted ? "var(--green)" : isAccepted ? "var(--accent)" : "var(--border)";
@@ -633,14 +643,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         hideTimer={hideTimer}
         onPhaseEnd={loadAll}
       >
-        <Intro text={intro} />
-        <MultiQuizPanel
-          questions={questions}
-          quest={quest}
-          onAnswer={handleAnswer}
-          onRefresh={loadAll}
-          submitting={submitting}
-        />
+        {renderQuizContent()}
         {!isAccepted && !isCompleted && (
           <button
             type="button"
@@ -678,7 +681,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
   }
 
   // ── Intraday ─────────────────────────────────────────────────────────────
-  if (phase === "intraday") {
+  if (effectivePhase === "intraday") {
     const isCompleted = quest.status === "completed";
     return (
       <CardShell
@@ -691,14 +694,7 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
         hideTimer={hideTimer}
         onPhaseEnd={loadAll}
       >
-        <Intro text={intro} />
-        <MultiQuizPanel
-          questions={questions}
-          quest={quest}
-          onAnswer={handleAnswer}
-          onRefresh={loadAll}
-          submitting={submitting}
-        />
+        {renderQuizContent()}
         <div
           style={{
             display: "flex",
@@ -716,31 +712,20 @@ export default function QuestCard({ score, metrics, sessionLabel }) {
     );
   }
 
-  // ── Postmarket ───────────────────────────────────────────────────────────
-  if (phase === "postmarket") {
-    return (
-      <CardShell
-        icon={<BookOpen size={16} color="var(--quest)" />}
-        title={QUEST.postQuiz}
-        accent="var(--quest)"
-        phase={naturalPhase}
-        hideTimer={hideTimer}
-        onPhaseEnd={loadAll}
-      >
-        <Intro text={intro} />
-        <MultiQuizPanel
-          questions={questions}
-          quest={quest}
-          onAnswer={handleAnswer}
-          onRefresh={loadAll}
-          submitting={submitting}
-        />
-        <RecentDots items={recent} />
-      </CardShell>
-    );
-  }
-
-  return null;
+  // ── Postmarket / Default ──────────────────────────────────────────────────
+  return (
+    <CardShell
+      icon={<BookOpen size={16} color="var(--quest)" />}
+      title={QUEST.postQuiz}
+      accent="var(--quest)"
+      phase={naturalPhase}
+      hideTimer={hideTimer}
+      onPhaseEnd={loadAll}
+    >
+      {renderQuizContent()}
+      <RecentDots items={recent} />
+    </CardShell>
+  );
 }
 
 // ── Reusable shell so phase branches stay readable ───────────────────────────

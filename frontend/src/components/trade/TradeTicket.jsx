@@ -47,7 +47,6 @@ export default function TradeTicket({
   const [entry, setEntry] = useState("");
   const [sl, setSl] = useState("");
   const [target, setTarget] = useState("");
-  const [thesis, setThesis] = useState("");
 
   const ltp = selected
     ? selected.type === "CE"
@@ -64,8 +63,17 @@ export default function TradeTicket({
     setSl(defaultSl(ltp, dir));
     setTarget(defaultTgt(ltp, dir));
     setLots(1);
-    setThesis("");
   }, [selected]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && onClear) {
+        onClear();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClear]);
 
   const quantity = (Number(lots) || 0) * lotSize;
   const entryN = parseFloat(entry);
@@ -141,14 +149,15 @@ export default function TradeTicket({
 
   function handleSubmit() {
     if (!selected || !valid) return;
+    const executionPrice = ltp > 0 ? ltp : entryN;
     onPlace({
       instrument: `${symbol} ${selected.strike} ${selected.type}`,
       direction,
       quantity,
-      entry_price: entryN,
+      entry_price: executionPrice,
       stop_loss: slN,
       target: tgtN,
-      thesis: thesis.trim() || null,
+      thesis: null,
     });
   }
 
@@ -305,39 +314,11 @@ export default function TradeTicket({
           )}
           {outlay !== null && (
             <div className="ticket-risk-row">
-              <span>Premium outlay</span>
+              <span>{isBuy ? "Premium outlay" : "Premium collected"}</span>
               <b>₹{outlay.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</b>
             </div>
           )}
         </div>
-        {/* Optional thesis — always visible, never required */}
-        <div className="ticket-field">
-          <div className="ticket-field-row">
-            <label>Thesis</label>
-            <span style={{ fontSize: 10, color: "var(--xp)", fontWeight: 600 }}>+15 XP</span>
-          </div>
-          <textarea
-            rows={3}
-            placeholder="Why are you taking this trade? (optional)"
-            value={thesis}
-            onChange={(e) => setThesis(e.target.value)}
-            style={{
-              width: "100%",
-              resize: "vertical",
-              minHeight: 56,
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--radius-sm)",
-              color: "var(--text-primary)",
-              fontFamily: "var(--font)",
-              fontSize: 12,
-              padding: "7px 10px",
-              lineHeight: 1.5,
-              outline: "none",
-            }}
-          />
-        </div>
-
       </div>
 
       {/* ── Footer ── */}

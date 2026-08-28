@@ -220,6 +220,62 @@ html:has(.main-trade) {
   background: var(--bg-card);
 }
 
+/* ── Trade Panel Tabs (Option Chain / Open Positions) ─────────────────── */
+
+.trade-panel-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.trade-panel-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trade-panel-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.trade-panel-tab.active {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  box-shadow: var(--elev-1);
+}
+
+.trade-tab-badge {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.15);
+  color: var(--accent);
+}
+
+.trade-tab-pnl {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
 /* ── Color helpers ─────────────────────────────────────────────────────── */
 
 .muted { color: var(--text-muted); }
