@@ -29,7 +29,7 @@ import "./App.css";
 const Trade = lazy(() => import("./pages/Trade"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
 const Reports = lazy(() => import("./pages/Reports"));
-const Learn = lazy(() => import("./pages/Learn"));
+// const Learn = lazy(() => import("./pages/Learn"));
 const Settings = lazy(() => import("./pages/Settings"));
 
 function AppContent() {
@@ -47,7 +47,7 @@ function AppContent() {
             <Route path="/trade" element={<Trade />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/learn" element={<Learn />} />
+            {/* <Route path="/learn" element={<Learn />} /> */}
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

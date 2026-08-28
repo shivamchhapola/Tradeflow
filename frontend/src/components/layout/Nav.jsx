@@ -46,7 +46,7 @@ export default function Nav() {
             <NavLink to="/trade" onClick={(e) => handleNavClick("/trade", e)}>{NAV.links.trade}</NavLink>
             <NavLink to="/portfolio" onClick={(e) => handleNavClick("/portfolio", e)}>{NAV.links.portfolio}</NavLink>
             <NavLink to="/reports" onClick={(e) => handleNavClick("/reports", e)}>{NAV.links.reports}</NavLink>
-            <NavLink to="/learn" onClick={(e) => handleNavClick("/learn", e)}>{NAV.links.learn}</NavLink>
+            {/* <NavLink to="/learn" onClick={(e) => handleNavClick("/learn", e)}>{NAV.links.learn}</NavLink> */}
           </div>
         )}
       </div>

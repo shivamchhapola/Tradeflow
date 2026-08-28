@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LineChart, ArrowLeftRight, Briefcase, BookOpen, GraduationCap } from "lucide-react";
+import { LineChart, ArrowLeftRight, Briefcase, BookOpen } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { NAV } from "../../lib/copy";
 
@@ -45,12 +45,12 @@ export default function BottomNav() {
         </span>
         <span className="bottom-nav-label">{NAV.links.reports}</span>
       </NavLink>
-      <NavLink to="/learn" className="bottom-nav-tab" onClick={(e) => handleNavClick("/learn", e)}>
+      {/* <NavLink to="/learn" className="bottom-nav-tab" onClick={(e) => handleNavClick("/learn", e)}>
         <span className="bottom-nav-icon" aria-hidden>
           <GraduationCap size={20} strokeWidth={2.2} />
         </span>
         <span className="bottom-nav-label">{NAV.links.learn}</span>
-      </NavLink>
+      </NavLink> */}
     </nav>
   );
 }
