@@ -19,7 +19,7 @@ class OllamaProvider(LLMProvider):
     def __init__(
         self,
         base_url: str = "http://localhost:11434",
-        model: str = "qwen3.5:4b",
+        model: str = "qwen3.5:2b",
         temperature: float = 0.7,
         max_tokens: int = 600,
         persona: str = "supportive",
@@ -38,16 +38,46 @@ class OllamaProvider(LLMProvider):
     def model_name(self) -> str:
         return self._model
 
+    def _resolve_model(self) -> str:
+        """
+        Check if the configured model is available in Ollama.
+        If not found, return the first installed model as fallback.
+        """
+        try:
+            resp = requests.get(f"{self._base_url}/api/tags", timeout=3)
+            if resp.status_code == 200:
+                tags = resp.json()
+                models = [m.get("name", "") for m in tags.get("models", [])]
+                if not models:
+                    return self._model
+
+                # Direct or base match
+                for m in models:
+                    if m == self._model or m.split(":")[0] == self._model.split(":")[0]:
+                        return m
+
+                # Fallback to first available model if configured model is missing
+                fallback = models[0]
+                logger.info(
+                    "Configured model '%s' not found in Ollama. Falling back to installed model '%s'",
+                    self._model,
+                    fallback,
+                )
+                return fallback
+        except Exception as e:
+            logger.debug("Could not query Ollama tags: %s", e)
+        return self._model
+
     def generate(self, prompt: str) -> str:
         url = f"{self._base_url}/api/generate"
+        active_model = self._resolve_model()
         try:
             resp = requests.post(
                 url,
                 json={
-                    "model": self._model,
+                    "model": active_model,
                     "prompt": prompt,
                     "stream": False,
-                    "think": False,
                     "options": {
                         "temperature": self._temperature,
                         "num_predict": self._max_tokens,
@@ -66,7 +96,11 @@ class OllamaProvider(LLMProvider):
             raise RuntimeError(f"Ollama returned an error: {e}")
 
         data = resp.json()
-        raw = data.get("response", "")
+        raw = (data.get("response") or "").strip()
+        if not raw:
+            raw = (data.get("thinking") or "").strip()
+        if not raw and isinstance(data.get("message"), dict):
+            raw = (data["message"].get("content") or "").strip()
         if not raw:
             raise RuntimeError("Ollama returned an empty response.")
         return raw
@@ -74,36 +108,49 @@ class OllamaProvider(LLMProvider):
     def health_check(self) -> dict:
         """Ping Ollama and check if the model is available."""
         try:
-            # Check server is up
             resp = requests.get(f"{self._base_url}/api/tags", timeout=5)
             resp.raise_for_status()
             tags = resp.json()
 
-            # Check our model exists
             models = [m.get("name", "") for m in tags.get("models", [])]
-            # Ollama model names can be "qwen3.5:4b" or "qwen3.5:4b-latest"
-            model_found = any(
-                m == self._model or m.startswith(f"{self._model}")
-                for m in models
-            )
-
-            if model_found:
-                return {
-                    "ok": True,
-                    "provider": "ollama",
-                    "model": self._model,
-                    "detail": f"Ollama running, model '{self._model}' available.",
-                }
-            else:
-                available = ", ".join(models[:5]) or "none"
+            if not models:
                 return {
                     "ok": False,
                     "provider": "ollama",
                     "model": self._model,
                     "detail": (
-                        f"Ollama running but model '{self._model}' not found. "
-                        f"Available: {available}. "
-                        f"Pull it with: ollama pull {self._model}"
+                        f"Ollama is running at {self._base_url}, but no models are installed. "
+                        f"Pull a model with: ollama pull {self._model}"
+                    ),
+                }
+
+            model_found = any(
+                m == self._model or m.split(":")[0] == self._model.split(":")[0]
+                for m in models
+            )
+
+            if model_found:
+                active_model = next(
+                    (m for m in models if m == self._model or m.split(":")[0] == self._model.split(":")[0]),
+                    self._model,
+                )
+                return {
+                    "ok": True,
+                    "provider": "ollama",
+                    "model": active_model,
+                    "available_models": models,
+                    "detail": f"Ollama running, model '{active_model}' available.",
+                }
+            else:
+                fallback = models[0]
+                return {
+                    "ok": True,
+                    "provider": "ollama",
+                    "model": fallback,
+                    "available_models": models,
+                    "detail": (
+                        f"Ollama running. Model '{self._model}' not found, but '{fallback}' is available. "
+                        f"Using '{fallback}' for generation."
                     ),
                 }
         except requests.ConnectionError:
