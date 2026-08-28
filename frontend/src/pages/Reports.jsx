@@ -188,10 +188,10 @@ export default function Reports() {
     <div className="reports-container page">
       {/* --- DASHBOARD HEADER --- */}
       <div className="reports-hero">
-        <div className="reports-hero-top">
-          <div className="reports-hero-title">
-            <h1>Trading Journal</h1>
-            <p>Retrospective log of closed trades and mentor reviews.</p>
+        <div className="page-header" style={{ marginBottom: 0 }}>
+          <div>
+            <h1 className="page-title">Trading Journal</h1>
+            <p className="page-subtitle">Retrospective log of closed trades and mentor reviews.</p>
           </div>
         </div>
 

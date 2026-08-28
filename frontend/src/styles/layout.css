@@ -181,6 +181,37 @@ body.electron .nav-brand {
   width: 100%;
 }
 
+/* Page header — consistent title + action row for every content page.
+   Dashboard, Portfolio, Reports, and Settings all share this pattern. */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-5);
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text-primary);
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 /* Auth pages get zero padding so auth-shell fills full width */
 .main.main-auth {
   padding: 0;
